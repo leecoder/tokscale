@@ -9,7 +9,8 @@ import { TabBar } from "@/components/TabBar";
 import { LeaderboardSkeleton } from "@/components/Skeleton";
 import { formatCurrency, formatNumber, formatDuration } from "@/lib/utils";
 import { useSettings } from "@/lib/useSettings";
-import type { LeaderboardSortBy } from "@/lib/leaderboard/constants";
+import { isValidSortBy, type LeaderboardSortBy } from "@/lib/leaderboard/constants";
+import { parseCustomDateRange } from "@/lib/leaderboard/dateRange";
 
 const Section = styled.div`
   margin-bottom: 40px;
@@ -458,25 +459,6 @@ const CTATitle = styled.h2`
 const CTADescription = styled.p`
   margin-bottom: 16px;
   color: var(--color-fg-muted);
-`;
-
-const CTANote = styled.p`
-  margin-top: 16px;
-  margin-bottom: 0;
-  padding: 12px;
-  border-radius: 8px;
-  background-color: var(--color-bg-subtle);
-  color: var(--color-fg-muted);
-  font-size: 13px;
-  line-height: 1.5;
-
-  code {
-    font-family: "Inconsolata", monospace;
-    background: rgba(255, 255, 255, 0.08);
-    padding: 2px 6px;
-    border-radius: 4px;
-    color: var(--color-fg-default);
-  }
 `;
 
 const CodeBlock = styled.div`
@@ -1047,47 +1029,48 @@ export default function LeaderboardClient({ initialData, currentUser, initialSor
 
   const urlPeriod = parsePeriodParam(searchParams.get("period"));
   const urlPage = searchParams.get("page") ? Math.max(1, Number(searchParams.get("page")) || 1) : null;
-  const urlSortBy = searchParams.get("sortBy") === "cost" ? "cost" as const : searchParams.get("sortBy") === "tokens" ? "tokens" as const : null;
+  const sortByParam = searchParams.get("sortBy");
+  const urlSortBy = isValidSortBy(sortByParam) ? sortByParam : null;
   const urlFrom = searchParams.get("from") || "";
   const urlTo = searchParams.get("to") || "";
+  const urlSearch = searchParams.get("search")?.trim() || "";
+  const initialCustomDateRange = parseCustomDateRange(urlPeriod === "custom" ? urlFrom : null, urlPeriod === "custom" ? urlTo : null);
 
   const [data, setData] = useState<LeaderboardData>(initialData);
   const [error, setError] = useState<string | null>(null);
   const [copiedCommand, setCopiedCommand] = useState<string | null>(null);
-  const [period, setPeriod] = useState<Period>(urlPeriod || initialData.period);
+  const [period, setPeriod] = useState<Period>(initialData.period);
   const [page, setPage] = useState(urlPage || initialData.pagination.page);
   const [currentUserRank, setCurrentUserRank] = useState<LeaderboardUser | null>(initialUserRank);
   const [currentUserRankError, setCurrentUserRankError] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [searchQuery, setSearchQuery] = useState(urlSearch);
+  const [debouncedSearch, setDebouncedSearch] = useState(urlSearch);
   const [retryToken, setRetryToken] = useState(0);
-  const [customFrom, setCustomFrom] = useState(urlFrom);
-  const [customTo, setCustomTo] = useState(urlTo);
-  const [appliedFrom, setAppliedFrom] = useState(urlPeriod === "custom" ? urlFrom : "");
-  const [appliedTo, setAppliedTo] = useState(urlPeriod === "custom" ? urlTo : "");
+  const [customFrom, setCustomFrom] = useState(initialCustomDateRange?.from || "");
+  const [customTo, setCustomTo] = useState(initialCustomDateRange?.to || "");
+  const [appliedFrom, setAppliedFrom] = useState(initialCustomDateRange?.from || "");
+  const [appliedTo, setAppliedTo] = useState(initialCustomDateRange?.to || "");
   const [resolvedRequest, setResolvedRequest] = useState({
     period: initialData.period,
     page: initialData.pagination.page,
     sortBy: initialSortBy,
-    search: "",
+    search: urlSearch,
     retryToken: 0,
-    customFrom: "",
-    customTo: "",
+    customFrom: initialCustomDateRange?.from || "",
+    customTo: initialCustomDateRange?.to || "",
   });
 
   const { leaderboardSortBy, setLeaderboardSort, mounted } = useSettings();
 
-  const initialSortByRef = useRef(urlSortBy);
   // Precedence for the active sort column:
   //   1. URL `?sortBy=` on first paint wins (preserves shareable links), but
   //   2. the moment the user clicks a SortOption, their choice takes over and
   //      stays sticky from the persisted setting (`leaderboardSortBy`).
-  // `userHasToggledSort` is the boolean that flips us from rule 1 to rule 2.
-  // Each SortOption.onClick must set this to true; do not remove that line
+  // `urlSortOverride` is cleared on user clicks; do not remove that state reset
   // when refactoring or the URL param will silently override every click.
-  const userHasToggledSort = useRef(false);
-  const effectiveSortBy = (!userHasToggledSort.current && initialSortByRef.current)
-    ? initialSortByRef.current
+  const [urlSortOverride, setUrlSortOverride] = useState<LeaderboardSortBy | null>(urlSortBy);
+  const effectiveSortBy = urlSortOverride
+    ? urlSortOverride
     : (mounted ? leaderboardSortBy : initialSortBy);
   const requestedPage = data.pagination.totalPages > 0
     ? Math.min(page, data.pagination.totalPages)
@@ -1116,17 +1099,18 @@ export default function LeaderboardClient({ initialData, currentUser, initialSor
     if (effectiveSortBy !== "tokens") params.set("sortBy", effectiveSortBy);
     if (period === "custom" && appliedFrom) params.set("from", appliedFrom);
     if (period === "custom" && appliedTo) params.set("to", appliedTo);
+    if (debouncedSearch) params.set("search", debouncedSearch);
     const qs = params.toString();
     const url = qs ? `${pathname}?${qs}` : pathname;
     window.history.replaceState(null, "", url);
-  }, [period, requestedPage, effectiveSortBy, appliedFrom, appliedTo, pathname]);
+  }, [period, requestedPage, effectiveSortBy, appliedFrom, appliedTo, pathname, debouncedSearch]);
 
-  // Debounce search input — skip setPage(1) on initial mount with empty query
+  // Debounce search input so URL/search sync updates after typing stops.
   const isSearchMounted = useRef(false);
   useEffect(() => {
     if (!isSearchMounted.current) {
       isSearchMounted.current = true;
-      if (!searchQuery) return;
+      return;
     }
     const timer = setTimeout(() => {
       setDebouncedSearch(searchQuery);
@@ -1345,10 +1329,8 @@ export default function LeaderboardClient({ initialData, currentUser, initialSor
             if (tab !== "custom") {
               setAppliedFrom("");
               setAppliedTo("");
-            }
-            if (tab !== "custom") {
-              setAppliedFrom("");
-              setAppliedTo("");
+              setCustomFrom("");
+              setCustomTo("");
             }
           }}
         />
@@ -1370,10 +1352,14 @@ export default function LeaderboardClient({ initialData, currentUser, initialSor
             min={customFrom || undefined}
           />
           <DateApplyButton
-            disabled={!customFrom || !customTo}
+            disabled={!parseCustomDateRange(customFrom, customTo)}
             onClick={() => {
-              setAppliedFrom(customFrom);
-              setAppliedTo(customTo);
+              const parsed = parseCustomDateRange(customFrom, customTo);
+              if (!parsed) {
+                return;
+              }
+              setAppliedFrom(parsed.from);
+              setAppliedTo(parsed.to);
               setPage(1);
             }}
           >
@@ -1405,7 +1391,7 @@ export default function LeaderboardClient({ initialData, currentUser, initialSor
             <SortOption
               $active={effectiveSortBy === 'tokens'}
               onClick={() => {
-                userHasToggledSort.current = true;
+                setUrlSortOverride(null);
                 setLeaderboardSort('tokens');
               }}
             >
@@ -1414,7 +1400,7 @@ export default function LeaderboardClient({ initialData, currentUser, initialSor
             <SortOption
               $active={effectiveSortBy === 'cost'}
               onClick={() => {
-                userHasToggledSort.current = true;
+                setUrlSortOverride(null);
                 setLeaderboardSort('cost');
               }}
             >
@@ -1423,7 +1409,7 @@ export default function LeaderboardClient({ initialData, currentUser, initialSor
             <SortOption
               $active={effectiveSortBy === 'time'}
               onClick={() => {
-                userHasToggledSort.current = true;
+                setUrlSortOverride(null);
                 setLeaderboardSort('time');
               }}
             >

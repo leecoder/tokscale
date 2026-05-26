@@ -29,10 +29,21 @@ export interface GroupCardData {
   role?: GroupRole;
 }
 
+interface GroupPagination {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+  hasNext: boolean;
+  hasPrev: boolean;
+}
+
 interface GroupsBrowserProps {
   currentUser: SessionUser | null;
   initialPublicGroups: GroupCardData[];
   initialMyGroups: GroupCardData[];
+  initialPublicPagination: GroupPagination;
+  initialMyPagination: GroupPagination;
 }
 
 type ActiveTab = "public" | "mine";
@@ -211,6 +222,22 @@ const ErrorText = styled.p`
   color: var(--color-danger-fg, #f85149);
 `;
 
+const LoadMoreButton = styled.button`
+  margin-top: 16px;
+  min-height: 36px;
+  padding: 0 16px;
+  border-radius: 8px;
+  border: 1px solid var(--color-border-default);
+  background: var(--color-bg-default);
+  color: var(--color-fg-default);
+  cursor: pointer;
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+  }
+`;
+
 function GroupCard({ group }: { group: GroupCardData }) {
   return (
     <Card href={`/groups/${group.slug}`}>
@@ -234,16 +261,42 @@ export default function GroupsBrowser({
   currentUser,
   initialPublicGroups,
   initialMyGroups,
+  initialPublicPagination,
+  initialMyPagination,
 }: GroupsBrowserProps) {
   const [activeTab, setActiveTab] = useState<ActiveTab>(currentUser ? "mine" : "public");
   const [publicGroups, setPublicGroups] = useState(initialPublicGroups);
   const [myGroups, setMyGroups] = useState(initialMyGroups);
-  const [isLoading, setIsLoading] = useState(false);
+  const [publicPagination, setPublicPagination] = useState(initialPublicPagination);
+  const [myPagination, setMyPagination] = useState(initialMyPagination);
+  const [loadingState, setLoadingState] = useState<Record<ActiveTab, boolean>>({
+    public: false,
+    mine: false,
+  });
   const [error, setError] = useState<string | null>(null);
 
-  const loadGroups = useCallback((tab: ActiveTab, signal?: AbortSignal) => {
-    const url = tab === "mine" ? "/api/groups?my=true" : "/api/groups";
-    setIsLoading(true);
+  const setTabLoading = useCallback((tab: ActiveTab, isLoading: boolean) => {
+    setLoadingState((current) => ({ ...current, [tab]: isLoading }));
+  }, []);
+
+  const loadGroups = useCallback((tab: ActiveTab, append = false, signal?: AbortSignal) => {
+    const page =
+      append && tab === "mine"
+        ? myPagination.page + 1
+        : append
+          ? publicPagination.page + 1
+          : 1;
+    const params = new URLSearchParams({
+      page: String(page),
+      limit: "20",
+    });
+
+    if (tab === "mine") {
+      params.set("my", "true");
+    }
+
+    const url = `/api/groups?${params.toString()}`;
+    setTabLoading(tab, true);
     setError(null);
 
     fetch(url, { signal })
@@ -255,10 +308,21 @@ export default function GroupsBrowser({
         if (!Array.isArray(payload.groups)) {
           throw new Error("Invalid response");
         }
+
+        const nextPagination = payload.pagination;
+
         if (tab === "mine") {
-          setMyGroups(payload.groups);
+          setMyGroups((prev) => (append ? [...prev, ...payload.groups] : payload.groups));
+          if (nextPagination) {
+            setMyPagination(nextPagination);
+          }
         } else {
-          setPublicGroups(payload.groups);
+          setPublicGroups((prev) =>
+            append ? [...prev, ...payload.groups] : payload.groups,
+          );
+          if (nextPagination) {
+            setPublicPagination(nextPagination);
+          }
         }
       })
       .catch((err) => {
@@ -268,15 +332,25 @@ export default function GroupsBrowser({
       })
       .finally(() => {
         if (!signal?.aborted) {
-          setIsLoading(false);
+          setTabLoading(tab, false);
         }
       });
-  }, []);
+  }, [myPagination.page, publicPagination.page, setTabLoading]);
 
   const groups = activeTab === "mine" ? myGroups : publicGroups;
+  const activePagination = activeTab === "mine" ? myPagination : publicPagination;
+  const isLoading = loadingState[activeTab];
   const handleTabChange = (tab: ActiveTab) => {
+    if (activeTab === tab) {
+      return;
+    }
+
     setActiveTab(tab);
     loadGroups(tab);
+  };
+
+  const handleLoadMore = () => {
+    loadGroups(activeTab, true);
   };
 
   // Send unauthenticated users back to /leaderboard?view=groups so they land
@@ -311,24 +385,37 @@ export default function GroupsBrowser({
       </Tabs>
 
       {error && <ErrorText role="alert">{error}</ErrorText>}
-      {isLoading ? (
+      {isLoading && groups.length === 0 ? (
         <SkeletonGrid aria-busy="true" aria-live="polite" aria-label="Loading groups">
           {Array.from({ length: 6 }).map((_, i) => (
             <SkeletonCard key={i} />
           ))}
         </SkeletonGrid>
-      ) : groups.length === 0 ? (
-        <EmptyState>
-          {activeTab === "mine"
-            ? "You are not in any groups yet."
-            : "No public groups yet."}
-        </EmptyState>
       ) : (
-        <Grid>
-          {groups.map((group) => (
-            <GroupCard key={group.id} group={group} />
-          ))}
-        </Grid>
+        <>
+          {groups.length === 0 ? (
+            <EmptyState>
+              {activeTab === "mine" ? "You are not in any groups yet." : "No public groups yet."}
+            </EmptyState>
+          ) : (
+            <>
+              <Grid>
+                {groups.map((group) => (
+                  <GroupCard key={group.id} group={group} />
+                ))}
+              </Grid>
+              {activePagination.hasNext ? (
+                <LoadMoreButton
+                  type="button"
+                  onClick={handleLoadMore}
+                  disabled={isLoading}
+                >
+                  {isLoading ? "Loading..." : "Load more"}
+                </LoadMoreButton>
+              ) : null}
+            </>
+          )}
+        </>
       )}
     </>
   );

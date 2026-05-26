@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getLeaderboardData } from "@/lib/leaderboard/getLeaderboard";
 import type { Period, SortBy } from "@/lib/leaderboard/types";
+import { parseCustomDateRange } from "@/lib/leaderboard/dateRange";
 
 export const revalidate = 60;
 
@@ -13,20 +14,11 @@ function parseIntSafe(value: string | null, defaultValue: number): number {
   return Number.isFinite(parsed) ? Math.floor(parsed) : defaultValue;
 }
 
-const DATE_REGEX = /^\d{4}-\d{2}-\d{2}$/;
-
-function isValidDateString(value: string | null): value is string {
-  if (!value || !DATE_REGEX.test(value)) return false;
-  const [year, month, day] = value.split("-").map(Number);
-  const date = new Date(year, month - 1, day);
-  return date.getFullYear() === year && date.getMonth() === month - 1 && date.getDate() === day;
-}
-
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
 
-    let periodParam = searchParams.get("period") || "all";
+    const periodParam = searchParams.get("period") || "all";
     let period: Period = VALID_PERIODS.includes(periodParam as Period)
       ? (periodParam as Period)
       : "all";
@@ -44,16 +36,13 @@ export async function GET(request: Request) {
     const fromParam = searchParams.get("from");
     const toParam = searchParams.get("to");
 
-    let customFrom: string | undefined;
-    let customTo: string | undefined;
+    const customDateRange =
+      period === "custom" ? parseCustomDateRange(fromParam, toParam) : null;
+    const customFrom = customDateRange?.from;
+    const customTo = customDateRange?.to;
 
-    if (period === "custom") {
-      if (isValidDateString(fromParam) && isValidDateString(toParam)) {
-        customFrom = fromParam;
-        customTo = toParam;
-      } else {
-        period = "all";
-      }
+    if (period === "custom" && !customDateRange) {
+      period = "all";
     }
 
     const data = await getLeaderboardData(period, page, limit, sortBy, search, customFrom, customTo);

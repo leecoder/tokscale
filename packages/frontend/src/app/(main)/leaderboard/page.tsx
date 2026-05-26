@@ -8,6 +8,7 @@ import { getLeaderboardData, getUserRank } from "@/lib/leaderboard/getLeaderboar
 import type { LeaderboardData, Period, SortBy } from "@/lib/leaderboard/types";
 import { getSession } from "@/lib/auth/session";
 import { SORT_BY_COOKIE_NAME, isValidSortBy } from "@/lib/leaderboard/constants";
+import { parseCustomDateRange } from "@/lib/leaderboard/dateRange";
 import { listPublicGroups, listUserGroups } from "@/lib/groups/queries";
 import LeaderboardClient from "./LeaderboardClient";
 import GroupsBrowser from "./GroupsBrowser";
@@ -18,7 +19,6 @@ function isMissingDatabaseUrl(error: unknown): boolean {
 }
 
 const VALID_PERIODS: Period[] = ["all", "month", "last-month", "week", "custom"];
-const DATE_REGEX = /^\d{4}-\d{2}-\d{2}$/;
 
 function createEmptyLeaderboardData(sortBy: SortBy): LeaderboardData {
   return {
@@ -99,9 +99,11 @@ async function LeaderboardWithPreferences({
   const sortByParam = typeof searchParams.sortBy === "string" ? searchParams.sortBy : null;
   const fromParam = typeof searchParams.from === "string" ? searchParams.from : null;
   const toParam = typeof searchParams.to === "string" ? searchParams.to : null;
+  const searchParam =
+    typeof searchParams.search === "string" ? searchParams.search.trim() : "";
 
   const sortBy: SortBy =
-    sortByParam && (sortByParam === "tokens" || sortByParam === "cost")
+    sortByParam && isValidSortBy(sortByParam)
       ? sortByParam
       : isValidSortBy(sortByCookie)
       ? sortByCookie
@@ -112,19 +114,18 @@ async function LeaderboardWithPreferences({
       ? (periodParam as Period)
       : "all";
 
-  let customFrom: string | undefined;
-  let customTo: string | undefined;
-  if (period === "custom") {
-    if (fromParam && DATE_REGEX.test(fromParam) && toParam && DATE_REGEX.test(toParam)) {
-      customFrom = fromParam;
-      customTo = toParam;
-    } else {
-      period = "all";
-    }
+  const customDateRange =
+    period === "custom" ? parseCustomDateRange(fromParam, toParam) : null;
+
+  if (period === "custom" && !customDateRange) {
+    period = "all";
   }
 
+  const customFrom = customDateRange?.from;
+  const customTo = customDateRange?.to;
+
   const [initialData, session] = await Promise.all([
-    getLeaderboardData(period, pageParam, 50, sortBy, "", customFrom, customTo).catch((error) => {
+    getLeaderboardData(period, pageParam, 50, sortBy, searchParam, customFrom, customTo).catch((error) => {
       if (isMissingDatabaseUrl(error)) {
         return createEmptyLeaderboardData(sortBy);
       }
@@ -197,6 +198,8 @@ async function GroupsView() {
       currentUser={session}
       initialPublicGroups={publicGroups.groups}
       initialMyGroups={myGroups?.groups ?? []}
+      initialPublicPagination={publicGroups.pagination}
+      initialMyPagination={myGroups?.pagination ?? emptyPagination}
     />
   );
 }

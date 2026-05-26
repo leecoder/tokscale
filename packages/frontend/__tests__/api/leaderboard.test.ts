@@ -83,4 +83,133 @@ describe("GET /api/leaderboard", () => {
       isStale: true,
     });
   });
+
+  it("accepts time sort requests", async () => {
+    getLeaderboardData.mockResolvedValue({
+      users: [],
+      pagination: {
+        page: 1,
+        limit: 50,
+        totalUsers: 0,
+        totalPages: 0,
+        hasNext: false,
+        hasPrev: false,
+      },
+      stats: {
+        totalTokens: 0,
+        totalCost: 0,
+        totalActiveTimeMs: 0,
+        totalSubmissions: 0,
+        uniqueUsers: 0,
+      },
+      period: "all",
+      sortBy: "time",
+    });
+
+    const response = await GET(
+      new Request("http://localhost:3000/api/leaderboard?period=all&sortBy=time")
+    );
+
+    expect(response.status).toBe(200);
+    expect(getLeaderboardData).toHaveBeenCalledWith(
+      "all",
+      1,
+      50,
+      "time",
+      "",
+      undefined,
+      undefined,
+    );
+  });
+
+  it("uses search query when provided", async () => {
+    getLeaderboardData.mockResolvedValue({
+      users: [],
+      pagination: {
+        page: 1,
+        limit: 50,
+        totalUsers: 0,
+        totalPages: 0,
+        hasNext: false,
+        hasPrev: false,
+      },
+      stats: {
+        totalTokens: 0,
+        totalCost: 0,
+        totalActiveTimeMs: 0,
+        totalSubmissions: 0,
+        uniqueUsers: 0,
+      },
+      period: "all",
+      sortBy: "tokens",
+    });
+
+    const response = await GET(
+      new Request("http://localhost:3000/api/leaderboard?search=alice")
+    );
+
+    expect(response.status).toBe(200);
+    expect(getLeaderboardData).toHaveBeenCalledWith(
+      "all",
+      1,
+      50,
+      "tokens",
+      "alice",
+      undefined,
+      undefined,
+    );
+  });
+
+  it("falls back to all period for invalid custom date ranges", async () => {
+    getLeaderboardData.mockResolvedValue({
+      users: [],
+      pagination: {
+        page: 1,
+        limit: 50,
+        totalUsers: 0,
+        totalPages: 0,
+        hasNext: false,
+        hasPrev: false,
+      },
+      stats: {
+        totalTokens: 0,
+        totalCost: 0,
+        totalActiveTimeMs: 0,
+        totalSubmissions: 0,
+        uniqueUsers: 0,
+      },
+      period: "all",
+      sortBy: "tokens",
+    });
+
+    const impossibleRangeResponse = await GET(
+      new Request("http://localhost:3000/api/leaderboard?period=custom&from=2026-02-31&to=2026-03-01&search=alice")
+    );
+    expect(impossibleRangeResponse.status).toBe(200);
+    expect(getLeaderboardData).toHaveBeenCalledWith(
+      "all",
+      1,
+      50,
+      "tokens",
+      "alice",
+      undefined,
+      undefined,
+    );
+
+    getLeaderboardData.mockClear();
+
+    const invertedRangeResponse = await GET(
+      new Request("http://localhost:3000/api/leaderboard?period=custom&from=2026-02-28&to=2026-02-10")
+    );
+    expect(invertedRangeResponse.status).toBe(200);
+    expect(getLeaderboardData).toHaveBeenCalledWith(
+      "all",
+      1,
+      50,
+      "tokens",
+      "",
+      undefined,
+      undefined,
+    );
+  });
 });
