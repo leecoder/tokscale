@@ -383,6 +383,7 @@ tokscale monthly --month --benchmark
 ```
 
 > **Note**: Date filters use your local timezone. Both `--since` and `--until` are inclusive.
+> **v2.2.0 note**: Session active-time daily buckets also use your local timezone, so users outside UTC may see active-time dates align with local token/cost report days instead of UTC day boundaries.
 
 ### Pricing Lookup
 

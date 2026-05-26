@@ -266,6 +266,8 @@ where
         loop {
             let day_key = day.format("%Y-%m-%d").to_string();
             let Some(day_start) = local_day_start(day, timezone) else {
+                // DST gap: skip the rest of this interval when local midnight
+                // is not representable for the active timezone.
                 break;
             };
 
@@ -273,6 +275,8 @@ where
                 break;
             };
             let Some(next_day_start) = local_day_start(next_day, timezone) else {
+                // DST gap: skip the rest of this interval when the next local
+                // midnight is not representable for the active timezone.
                 break;
             };
 
