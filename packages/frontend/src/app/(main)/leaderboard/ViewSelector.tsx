@@ -69,24 +69,51 @@ const Title = styled.h1`
   }
 `;
 
+export type LeaderboardSearchParams = Record<string, string | string[] | undefined>;
+
 interface ViewSelectorProps {
   current: LeaderboardView;
+  searchParams: LeaderboardSearchParams;
 }
 
-export default function ViewSelector({ current }: ViewSelectorProps) {
+export function buildLeaderboardViewHref(
+  searchParams: LeaderboardSearchParams,
+  view: LeaderboardView
+): string {
+  const params = new URLSearchParams();
+
+  for (const [key, value] of Object.entries(searchParams)) {
+    if (key === "page" || key === "view" || value === undefined) {
+      continue;
+    }
+
+    if (Array.isArray(value)) {
+      for (const item of value) {
+        params.append(key, item);
+      }
+    } else {
+      params.set(key, value);
+    }
+  }
+
+  params.set("view", view);
+  return `/leaderboard?${params.toString()}`;
+}
+
+export default function ViewSelector({ current, searchParams }: ViewSelectorProps) {
   return (
     <Bar aria-label="Leaderboard view">
       <Title>{current === "groups" ? "Groups" : "Leaderboard"}</Title>
       <Group>
         <Item
-          href="/leaderboard?view=users"
+          href={buildLeaderboardViewHref(searchParams, "users")}
           $active={current === "users"}
           aria-current={current === "users" ? "page" : undefined}
         >
           Users
         </Item>
         <Item
-          href="/leaderboard?view=groups"
+          href={buildLeaderboardViewHref(searchParams, "groups")}
           $active={current === "groups"}
           aria-current={current === "groups" ? "page" : undefined}
         >

@@ -86,7 +86,7 @@ async function LeaderboardWithPreferences({
   if (view === "groups") {
     return (
       <>
-        <ViewSelector current="groups" />
+        <ViewSelector current="groups" searchParams={searchParams} />
         <GroupsView />
       </>
     );
@@ -150,7 +150,7 @@ async function LeaderboardWithPreferences({
 
   return (
     <>
-      <ViewSelector current="users" />
+      <ViewSelector current="users" searchParams={searchParams} />
       <LeaderboardClient
         initialData={initialData}
         currentUser={session}
