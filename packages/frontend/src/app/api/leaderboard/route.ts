@@ -15,9 +15,9 @@ function parseIntSafe(value: string | null, defaultValue: number): number {
 }
 
 export async function GET(request: Request) {
-  try {
-    const { searchParams } = new URL(request.url);
+  const { searchParams } = new URL(request.url);
 
+  try {
     const periodParam = searchParams.get("period") || "all";
     let period: Period = VALID_PERIODS.includes(periodParam as Period)
       ? (periodParam as Period)
