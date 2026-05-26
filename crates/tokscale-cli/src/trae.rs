@@ -8,8 +8,9 @@
 //! | Solo    | Solo         | TRAE SOLO             |
 //! | Ide     | IDE          | Trae                  |
 //!
-//! Each variant has its own ``ClientId``; the underlying
-//! storage/decrypt/token/sync logic is shared.
+//! Variants are credential sources only. Trae IDE and Trae Solo expose the same
+//! account-level usage data through the international usage API, so synced
+//! reports are stored once under tokscale's single `trae` client.
 //!
 //! The China variants (trae.com.cn) are intentionally not integrated:
 //! the CN backend does not expose a session-level usage query API.
@@ -20,13 +21,14 @@ pub mod auth {
     //!
     //! Two international Trae variants:
     //!
-    //! | Variant | Product line | App Support directory | tokscale client id |
-    //! |---------|--------------|-----------------------|--------------------|
-    //! | Solo    | Solo         | TRAE SOLO             | trae-solo          |
-    //! | Ide     | IDE          | Trae                  | trae               |
+    //! | Variant | Product line | App Support directory | credential label |
+    //! |---------|--------------|-----------------------|------------------|
+    //! | Solo    | Solo         | TRAE SOLO             | trae-solo        |
+    //! | Ide     | IDE          | Trae                  | trae             |
     //!
-    //! Shared backend (api-sg-central.trae.ai); shared account but usage data
-    //! is tracked independently per variant.
+    //! Shared backend (api-sg-central.trae.ai); variants only decide where
+    //! credentials are discovered. Usage sync stores account-level API results
+    //! once under the single `trae` report client.
     //!
     //! The China variants (trae.com.cn) are intentionally not integrated:
     //! the CN backend does not expose a session-level usage query API.
