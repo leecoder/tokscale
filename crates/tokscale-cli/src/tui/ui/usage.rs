@@ -42,7 +42,7 @@ fn render_fetching(frame: &mut Frame, app: &App, area: Rect) {
         ])
         .split(area)[1];
 
-    let spin = ['⠋','⠙','⠹','⠸','⠼','⠴','⠦','⠧','⠇','⠏'][app.spinner_frame % 10];
+    let spin = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'][app.spinner_frame % 10];
     let paragraph = Paragraph::new(format!("{spin} Fetching subscription data..."))
         .style(Style::default().fg(app.theme.muted))
         .alignment(Alignment::Center);
@@ -86,7 +86,12 @@ fn render_empty(frame: &mut Frame, app: &App, area: Rect) {
     frame.render_widget(paragraph, center);
 }
 
-fn render_loaded(frame: &mut Frame, app: &App, area: Rect, outputs: &[crate::commands::usage::UsageOutput]) {
+fn render_loaded(
+    frame: &mut Frame,
+    app: &App,
+    area: Rect,
+    outputs: &[crate::commands::usage::UsageOutput],
+) {
     let mut lines: Vec<Line> = Vec::new();
 
     for (i, output) in outputs.iter().enumerate() {
@@ -96,11 +101,16 @@ fn render_loaded(frame: &mut Frame, app: &App, area: Rect, outputs: &[crate::com
 
         lines.push(Line::from(Span::styled(
             format!(" {} ", output.provider),
-            Style::default().fg(app.theme.foreground).add_modifier(Modifier::BOLD),
+            Style::default()
+                .fg(app.theme.foreground)
+                .add_modifier(Modifier::BOLD),
         )));
 
         for m in &output.metrics {
-            let remaining = m.remaining_label.clone().unwrap_or_else(|| format!("{:.0}% left", m.remaining_percent));
+            let remaining = m
+                .remaining_label
+                .clone()
+                .unwrap_or_else(|| format!("{:.0}% left", m.remaining_percent));
             let bar = helpers::render_ascii_bar(m.remaining_percent, BAR_WIDTH);
             let reset = m
                 .resets_at
@@ -118,14 +128,13 @@ fn render_loaded(frame: &mut Frame, app: &App, area: Rect, outputs: &[crate::com
             );
             let bar_span = Span::styled(
                 format!("{:<24}", bar),
-                Style::default()
-                    .fg(if m.remaining_percent < 10.0 {
-                        Color::Red
-                    } else if m.remaining_percent < 25.0 {
-                        Color::Yellow
-                    } else {
-                        app.theme.accent
-                    }),
+                Style::default().fg(if m.remaining_percent < 10.0 {
+                    Color::Red
+                } else if m.remaining_percent < 25.0 {
+                    Color::Yellow
+                } else {
+                    app.theme.accent
+                }),
             );
             let reset_span = Span::styled(reset, Style::default().fg(app.theme.muted));
 

@@ -382,8 +382,7 @@ pub fn parse_claude_file_with_cache(
             }
 
             if entry.entry_type == "user" {
-                if let Some(timestamp_ms) =
-                    parse_claude_entry_timestamp(entry.timestamp.as_deref())
+                if let Some(timestamp_ms) = parse_claude_entry_timestamp(entry.timestamp.as_deref())
                 {
                     pending_request_start_timestamp_ms = Some(timestamp_ms);
                 }
@@ -1202,10 +1201,7 @@ mod tests {
         assert_eq!(messages[0].tokens.output, 250);
         assert_eq!(messages[0].timestamp, 1_733_047_203_500);
         assert_eq!(messages[0].duration_ms, Some(3500));
-        assert_eq!(
-            messages[0].dedup_key.as_deref(),
-            Some("message:msg_stream")
-        );
+        assert_eq!(messages[0].dedup_key.as_deref(), Some("message:msg_stream"));
     }
 
     #[test]

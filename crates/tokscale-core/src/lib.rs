@@ -1273,7 +1273,8 @@ fn parse_all_messages_with_pricing_with_env_strategy(
         .par_iter()
         .flat_map(|path| sessions::trae::parse_trae_file("trae", path))
         .collect();
-    all_messages.extend(trae_messages);
+    let deduped_trae_messages = dedupe_latest_trae_messages(trae_messages);
+    all_messages.extend(deduped_trae_messages);
 
     if include_synthetic {
         if let Some(db_path) = &scan_result.synthetic_db {
@@ -1309,6 +1310,40 @@ fn parse_all_messages_with_pricing_with_env_strategy(
     source_cache.save_if_dirty();
 
     all_messages
+}
+
+fn dedupe_latest_trae_messages(mut messages: Vec<UnifiedMessage>) -> Vec<UnifiedMessage> {
+    let mut latest_by_session: HashMap<String, UnifiedMessage> = HashMap::new();
+
+    for message in messages.drain(..) {
+        let session_id = message.session_id.clone();
+        match latest_by_session.get_mut(&session_id) {
+            Some(existing) => {
+                let should_replace = message.timestamp > existing.timestamp
+                    || (message.timestamp == existing.timestamp
+                        && message.dedup_key.as_ref().is_some_and(|key| {
+                            existing
+                                .dedup_key
+                                .as_ref()
+                                .is_none_or(|existing_key| key > existing_key)
+                        }));
+                if should_replace {
+                    *existing = message;
+                }
+            }
+            None => {
+                let _ = latest_by_session.insert(session_id, message);
+            }
+        }
+    }
+
+    let mut deduped: Vec<UnifiedMessage> = latest_by_session.into_values().collect();
+    deduped.sort_unstable_by(|a, b| {
+        a.session_id
+            .cmp(&b.session_id)
+            .then_with(|| a.timestamp.cmp(&b.timestamp))
+    });
+    deduped
 }
 
 fn filter_unified_messages(
@@ -1432,10 +1467,9 @@ fn aggregate_model_usage_entries(
         entry.reasoning += msg.tokens.reasoning;
         entry.message_count += msg.message_count.max(0);
         entry.cost += msg.cost;
-        entry.performance.record_message(
-            positive_token_total(&msg.tokens),
-            msg.duration_ms,
-        );
+        entry
+            .performance
+            .record_message(positive_token_total(&msg.tokens), msg.duration_ms);
     }
 
     let mut entries: Vec<ModelUsage> = model_map
@@ -2331,16 +2365,19 @@ pub fn parse_local_clients(options: LocalParseOptions) -> Result<ParsedMessages,
     counts.set(ClientId::Antigravity, antigravity_count);
     messages.extend(antigravity_msgs);
 
-    let trae_msgs: Vec<ParsedMessage> = scan_result
-        .get(ClientId::Trae)
-        .par_iter()
-        .flat_map(|path| {
-            sessions::trae::parse_trae_file("trae", path)
-                .into_iter()
-                .map(|msg| unified_to_parsed(&msg))
-                .collect::<Vec<_>>()
-        })
-        .collect();
+    let trae_msgs: Vec<ParsedMessage> = {
+        let unique_trae_messages = dedupe_latest_trae_messages(
+            scan_result
+                .get(ClientId::Trae)
+                .par_iter()
+                .flat_map(|path| sessions::trae::parse_trae_file("trae", path))
+                .collect(),
+        );
+        unique_trae_messages
+            .into_iter()
+            .map(|msg| unified_to_parsed(&msg))
+            .collect()
+    };
     let trae_count = trae_msgs.len() as i32;
     counts.set(ClientId::Trae, trae_count);
     messages.extend(trae_msgs);
@@ -2485,9 +2522,9 @@ pub fn parsed_to_unified(msg: &ParsedMessage, cost: f64) -> UnifiedMessage {
 #[cfg(test)]
 mod tests {
     use super::{
-        aggregate_model_usage_entries, apply_pricing_if_available, message_cache,
-        normalize_model_for_grouping, parse_all_messages_with_pricing, parse_local_clients,
-        parsed_to_unified, pricing, retain_for_requested_clients, scanner,
+        aggregate_model_usage_entries, apply_pricing_if_available, dedupe_latest_trae_messages,
+        message_cache, normalize_model_for_grouping, parse_all_messages_with_pricing,
+        parse_local_clients, parsed_to_unified, pricing, retain_for_requested_clients, scanner,
         select_local_parse_pricing, unified_to_parsed, ClientId, GroupBy, LocalParseOptions,
         TokenBreakdown, UnifiedMessage, UNKNOWN_WORKSPACE_LABEL,
     };
@@ -2525,6 +2562,30 @@ mod tests {
             workspace_label.map(str::to_string),
         );
         msg
+    }
+
+    fn make_trae_message(
+        session_id: &str,
+        timestamp: i64,
+        dedup_key: Option<&str>,
+        cost: f64,
+    ) -> UnifiedMessage {
+        UnifiedMessage::new_with_dedup(
+            "trae",
+            "gpt-5.2",
+            "openai",
+            session_id,
+            timestamp,
+            TokenBreakdown {
+                input: 10,
+                output: 5,
+                cache_read: 0,
+                cache_write: 0,
+                reasoning: 0,
+            },
+            cost,
+            dedup_key.map(str::to_string),
+        )
     }
 
     #[allow(clippy::too_many_arguments)]
@@ -5194,6 +5255,75 @@ mod tests {
 
         assert!(Arc::ptr_eq(&selected, &fresh));
         assert!(!stale_called);
+    }
+
+    #[test]
+    fn test_dedupe_latest_trae_messages_keeps_latest_timestamp_for_session() {
+        let messages = vec![
+            make_trae_message(
+                "session-stable",
+                1_700_000_002_000,
+                Some("trae:session-stable:1_700_000_002"),
+                0.2,
+            ),
+            make_trae_message(
+                "session-stable",
+                1_700_000_003_000,
+                Some("trae:session-stable:1_700_000_003"),
+                0.3,
+            ),
+            make_trae_message(
+                "session-other",
+                1_700_000_001_000,
+                Some("trae:session-other:1_700_000_001"),
+                0.1,
+            ),
+        ];
+
+        let deduped = dedupe_latest_trae_messages(messages);
+
+        assert_eq!(deduped.len(), 2);
+        let stable = deduped
+            .iter()
+            .find(|msg| msg.session_id == "session-stable")
+            .expect("session-stable should remain after dedupe");
+        assert_eq!(stable.timestamp, 1_700_000_003_000);
+        assert_eq!(stable.cost, 0.3);
+        assert_eq!(
+            stable.dedup_key.as_deref(),
+            Some("trae:session-stable:1_700_000_003")
+        );
+    }
+
+    #[test]
+    fn test_dedupe_latest_trae_messages_tiebreaks_by_dedup_key() {
+        let messages = vec![
+            make_trae_message(
+                "session-stable",
+                1_700_000_010_000,
+                Some("dedupe-key-a"),
+                0.2,
+            ),
+            make_trae_message(
+                "session-stable",
+                1_700_000_010_000,
+                Some("dedupe-key-z"),
+                0.4,
+            ),
+            make_trae_message(
+                "session-stable",
+                1_700_000_009_000,
+                Some("dedupe-key-m"),
+                0.1,
+            ),
+        ];
+
+        let deduped = dedupe_latest_trae_messages(messages);
+
+        assert_eq!(deduped.len(), 1);
+        assert_eq!(deduped[0].timestamp, 1_700_000_010_000);
+        assert_eq!(deduped[0].dedup_key.as_deref(), Some("dedupe-key-z"));
+        assert_eq!(deduped[0].cost, 0.4);
     }
 
     #[test]

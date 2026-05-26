@@ -57,6 +57,7 @@ pub fn clear_cache() {
     }
 }
 
+#[cfg_attr(test, allow(dead_code))]
 pub fn load_cache() -> Option<Vec<UsageOutput>> {
     let path = cache_path()?;
     let content = std::fs::read_to_string(&path).ok()?;
@@ -76,8 +77,10 @@ pub fn load_cache() -> Option<Vec<UsageOutput>> {
 
 // ── Public API ──
 
+type UsageProvider = (&'static str, fn() -> bool, fn() -> Result<UsageOutput>);
+
 pub fn fetch_all() -> Vec<UsageOutput> {
-    let providers: Vec<(&str, fn() -> bool, fn() -> Result<UsageOutput>)> = vec![
+    let providers: Vec<UsageProvider> = vec![
         ("Claude", claude::has_credentials, claude::fetch),
         ("Codex", codex::has_credentials, codex::fetch),
         ("Z.ai", zai::has_credentials, zai::fetch),
@@ -87,10 +90,7 @@ pub fn fetch_all() -> Vec<UsageOutput> {
         ("MiniMax", minimax::has_credentials, minimax::fetch),
     ];
 
-    let active: Vec<_> = providers
-        .into_iter()
-        .filter(|(_, has, _)| has())
-        .collect();
+    let active: Vec<_> = providers.into_iter().filter(|(_, has, _)| has()).collect();
 
     if active.is_empty() {
         return vec![];
@@ -99,12 +99,7 @@ pub fn fetch_all() -> Vec<UsageOutput> {
     std::thread::scope(|s| {
         active
             .into_iter()
-            .map(|(_, _, fetch)| {
-                s.spawn(move || match fetch() {
-                    Ok(o) => Some(o),
-                    Err(_) => None,
-                })
-            })
+            .map(|(_, _, fetch)| s.spawn(move || fetch().ok()))
             .collect::<Vec<_>>()
             .into_iter()
             .filter_map(|h| h.join().ok().flatten())
@@ -130,16 +125,28 @@ fn render_light(output: &UsageOutput) {
     // Provider header
     println!("│ {:<width$}│", output.provider, width = CARD_WIDTH - 1);
     for m in &output.metrics {
-        let rem = m.remaining_label.clone().unwrap_or_else(|| format!("{:.0}% left", m.remaining_percent));
+        let rem = m
+            .remaining_label
+            .clone()
+            .unwrap_or_else(|| format!("{:.0}% left", m.remaining_percent));
         let rem = truncate(&rem, 11);
         let bar = helpers::render_ascii_bar(m.remaining_percent, BAR_WIDTH);
-        let reset = m.resets_at.as_ref().map(|r| helpers::format_reset_time(r)).unwrap_or_default();
+        let reset = m
+            .resets_at
+            .as_ref()
+            .map(|r| helpers::format_reset_time(r))
+            .unwrap_or_default();
         let label = truncate(&m.label, 14);
         println!("│ {:<14}{:<11}{:<14}{:<22}│", label, rem, bar, reset);
     }
     if let Some(ref email) = output.email {
         let email = truncate(email, CARD_WIDTH - 11);
-        println!("│ {:<10}{:<width$}│", "Account", email, width = CARD_WIDTH - 11);
+        println!(
+            "│ {:<10}{:<width$}│",
+            "Account",
+            email,
+            width = CARD_WIDTH - 11
+        );
     }
     if let Some(ref plan) = output.plan {
         let plan = truncate(plan, CARD_WIDTH - 11);

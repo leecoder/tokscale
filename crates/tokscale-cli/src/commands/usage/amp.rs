@@ -23,7 +23,11 @@ struct ApiResult {
 
 fn read_credentials() -> Result<String> {
     let home = dirs::home_dir().unwrap_or_else(|| std::path::PathBuf::from("."));
-    let path = home.join(".local").join("share").join("amp").join("secrets.json");
+    let path = home
+        .join(".local")
+        .join("share")
+        .join("amp")
+        .join("secrets.json");
     if !path.exists() {
         anyhow::bail!("No Amp credentials found. Run 'amp' to log in.");
     }
@@ -72,7 +76,8 @@ fn parse_display_text(text: &str) -> Vec<UsageMetric> {
                             if let Some(rate) = parse_dollar_after(text, "+$") {
                                 if rate > 0.0 && used > 0.0 && rate.is_finite() {
                                     let secs = (used / rate * 3600.0) as i64;
-                                    let resets = chrono::Utc::now() + chrono::Duration::seconds(secs);
+                                    let resets =
+                                        chrono::Utc::now() + chrono::Duration::seconds(secs);
                                     resets_at = Some(resets.to_rfc3339());
                                 }
                             }
@@ -117,7 +122,11 @@ fn detect_plan(metrics: &[UsageMetric]) -> Option<String> {
 
 pub fn has_credentials() -> bool {
     let home = dirs::home_dir().unwrap_or_else(|| std::path::PathBuf::from("."));
-    home.join(".local").join("share").join("amp").join("secrets.json").exists()
+    home.join(".local")
+        .join("share")
+        .join("amp")
+        .join("secrets.json")
+        .exists()
 }
 
 pub fn fetch() -> Result<UsageOutput> {
@@ -152,10 +161,7 @@ pub fn fetch() -> Result<UsageOutput> {
                 .unwrap_or("unknown error");
             anyhow::bail!("Amp API returned an error: {msg}");
         }
-        let display_text = body
-            .result
-            .and_then(|r| r.display_text)
-            .unwrap_or_default();
+        let display_text = body.result.and_then(|r| r.display_text).unwrap_or_default();
 
         let metrics = parse_display_text(&display_text);
         let plan = detect_plan(&metrics);

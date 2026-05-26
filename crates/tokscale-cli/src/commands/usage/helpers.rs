@@ -56,7 +56,10 @@ pub fn render_ascii_bar(remaining_percent: f64, width: usize) -> String {
 
 pub fn atomic_write_secret(path: &std::path::Path, data: &[u8]) -> std::io::Result<()> {
     let dir = path.parent().ok_or_else(|| {
-        std::io::Error::new(std::io::ErrorKind::InvalidInput, "path has no parent directory")
+        std::io::Error::new(
+            std::io::ErrorKind::InvalidInput,
+            "path has no parent directory",
+        )
     })?;
     std::fs::create_dir_all(dir)?;
     let temp_path = path.with_extension(format!("{}.tmp", std::process::id()));

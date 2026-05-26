@@ -1,8 +1,8 @@
 use anyhow::Result;
 use serde::Deserialize;
 
-use super::{UsageMetric, UsageOutput};
 use super::helpers::{capitalize, read_keychain};
+use super::{UsageMetric, UsageOutput};
 
 #[derive(Debug, Deserialize)]
 #[allow(dead_code)]
@@ -34,8 +34,7 @@ struct FreeResponse {
 fn read_token_from_keychain() -> Result<String> {
     let raw = read_keychain("gh:github.com")?;
     // go-keyring may base64-encode the value
-    if raw.starts_with("go-keyring-base64:") {
-        let encoded = &raw["go-keyring-base64:".len()..];
+    if let Some(encoded) = raw.strip_prefix("go-keyring-base64:") {
         let decoded = base64_decode(encoded)?;
         Ok(decoded)
     } else {
@@ -75,7 +74,12 @@ fn parse_token_from_hosts() -> Result<String> {
             continue;
         }
         // A non-indented, non-empty, non-comment line starts a new section
-        if in_github && !line.starts_with(' ') && !line.starts_with('\t') && !trimmed.is_empty() && !trimmed.starts_with('#') {
+        if in_github
+            && !line.starts_with(' ')
+            && !line.starts_with('\t')
+            && !trimmed.is_empty()
+            && !trimmed.starts_with('#')
+        {
             in_github = false;
         }
         if in_github && trimmed.starts_with("oauth_token:") {
@@ -93,9 +97,13 @@ fn read_token_from_hosts() -> Result<String> {
 }
 
 fn read_credentials() -> Result<String> {
-    read_token_from_keychain().or_else(|_| read_token_from_hosts()).map_err(|_| {
-        anyhow::anyhow!("No GitHub Copilot credentials found. Run 'gh auth login' to authenticate.")
-    })
+    read_token_from_keychain()
+        .or_else(|_| read_token_from_hosts())
+        .map_err(|_| {
+            anyhow::anyhow!(
+                "No GitHub Copilot credentials found. Run 'gh auth login' to authenticate."
+            )
+        })
 }
 
 fn base64_decode(input: &str) -> Result<String> {
@@ -127,8 +135,12 @@ fn base64_decode(input: &str) -> Result<String> {
     let mut buf = 0u32;
     let mut bits = 0u32;
     for &b in bytes {
-        if b == b'=' { break; }
-        if (b as usize) >= TABLE.len() { continue; }
+        if b == b'=' {
+            break;
+        }
+        if (b as usize) >= TABLE.len() {
+            continue;
+        }
         if let Some(v) = TABLE[b as usize] {
             buf = (buf << 6) | v as u32;
             bits += 6;
@@ -189,7 +201,8 @@ pub fn fetch() -> Result<UsageOutput> {
         let client = reqwest::Client::new();
         let resp = fetch_api(&client, &token).await?;
 
-        let plan = resp.get("copilot_plan")
+        let plan = resp
+            .get("copilot_plan")
             .and_then(|v| v.as_str())
             .map(capitalize);
 
@@ -197,20 +210,22 @@ pub fn fetch() -> Result<UsageOutput> {
 
         // Try paid tier response (quota_snapshots)
         if let Some(snapshots) = resp.get("quota_snapshots").and_then(|v| v.as_object()) {
-            let reset_date = resp.get("quota_reset_date")
+            let reset_date = resp
+                .get("quota_reset_date")
                 .and_then(|v| v.as_str())
                 .map(String::from);
 
             for (key, value) in snapshots {
                 let remaining = value.get("remaining").and_then(|v| v.as_i64());
                 let entitlement = value.get("entitlement").and_then(|v| v.as_i64());
-                let pct_remaining = value.get("percent_remaining")
+                let pct_remaining = value
+                    .get("percent_remaining")
                     .and_then(|v| v.as_f64())
-                    .unwrap_or_else(|| {
-                        match (remaining, entitlement) {
-                            (Some(r), Some(e)) if e > 0 => (r as f64 / e as f64 * 100.0).clamp(0.0, 100.0),
-                            _ => 100.0,
+                    .unwrap_or_else(|| match (remaining, entitlement) {
+                        (Some(r), Some(e)) if e > 0 => {
+                            (r as f64 / e as f64 * 100.0).clamp(0.0, 100.0)
                         }
+                        _ => 100.0,
                     })
                     .clamp(0.0, 100.0);
 
@@ -236,7 +251,8 @@ pub fn fetch() -> Result<UsageOutput> {
         if metrics.is_empty() {
             if let Some(quotas) = resp.get("limited_user_quotas").and_then(|v| v.as_object()) {
                 let monthly = resp.get("monthly_quotas").and_then(|v| v.as_object());
-                let reset_date = resp.get("limited_user_reset_date")
+                let reset_date = resp
+                    .get("limited_user_reset_date")
                     .and_then(|v| v.as_str())
                     .map(String::from);
 

@@ -402,8 +402,10 @@ pub fn parse_kiro_sqlite(db_path: &Path) -> Vec<UnifiedMessage> {
                 continue;
             }
 
-            let duration_ms =
-                duration_between_ms(meta.request_start_timestamp_ms, meta.stream_end_timestamp_ms);
+            let duration_ms = duration_between_ms(
+                meta.request_start_timestamp_ms,
+                meta.stream_end_timestamp_ms,
+            );
             let timestamp = meta
                 .request_start_timestamp_ms
                 .or(meta.stream_end_timestamp_ms)

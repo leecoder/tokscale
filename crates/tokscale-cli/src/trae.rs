@@ -926,6 +926,7 @@ pub mod sync {
     use anyhow::{Context, Result};
     use chrono::Utc;
     use serde::{Deserialize, Serialize};
+    use std::collections::HashMap;
     use std::path::PathBuf;
     use std::time::Duration;
 
@@ -933,6 +934,47 @@ pub mod sync {
     const API_PAGE_DELAY_MS: u64 = 300;
     const OVERLAP_MARGIN_SECS: i64 = 7200; // 2-hour overlap buffer
     const MANIFEST_VERSION: i32 = 1;
+
+    fn should_replace_session_entry(
+        existing: &TraeSessionEntry,
+        incoming: &TraeSessionEntry,
+    ) -> bool {
+        incoming.usage_time > existing.usage_time
+            || (incoming.usage_time == existing.usage_time
+                && incoming.artifact_path > existing.artifact_path)
+    }
+
+    fn upsert_manifest_entry(
+        manifest_sessions: &mut HashMap<String, TraeSessionEntry>,
+        incoming: TraeSessionEntry,
+    ) {
+        if let Some(existing) = manifest_sessions.get_mut(&incoming.session_id) {
+            if should_replace_session_entry(existing, &incoming) {
+                *existing = incoming;
+            }
+            return;
+        }
+
+        manifest_sessions.insert(incoming.session_id.clone(), incoming);
+    }
+
+    fn merge_manifest_sessions(
+        existing: Vec<TraeSessionEntry>,
+        incoming: Vec<TraeSessionEntry>,
+    ) -> Vec<TraeSessionEntry> {
+        let mut entries: HashMap<String, TraeSessionEntry> = existing
+            .into_iter()
+            .map(|entry| (entry.session_id.clone(), entry))
+            .collect();
+
+        for incoming_entry in incoming {
+            upsert_manifest_entry(&mut entries, incoming_entry);
+        }
+
+        let mut merged: Vec<TraeSessionEntry> = entries.into_values().collect();
+        merged.sort_unstable_by(|a, b| a.session_id.cmp(&b.session_id));
+        merged
+    }
 
     // ── Manifest ───────────────────────────────────────────────────────────
 
@@ -1203,34 +1245,28 @@ pub mod sync {
         // Write the whole batch to a single JSON file.
         let batch_ts = Utc::now().format("%Y%m%dT%H%M%S").to_string();
         let artifact_filename = format!("usage-{}.json", batch_ts);
+        let manifest_session_path = format!("sessions/{artifact_filename}");
         let artifact_path = dir.join(&artifact_filename);
         let json = serde_json::to_string_pretty(&sessions)?;
         std::fs::write(&artifact_path, json)?;
 
-        // Merge new sessions into the manifest.
-        let mut existing_ids: std::collections::HashSet<String> = next_manifest
-            .sessions
+        let incoming_sessions: Vec<TraeSessionEntry> = sessions
             .iter()
-            .map(|e| e.session_id.clone())
+            .filter_map(|s| {
+                let session_id = s["session_id"].as_str()?.to_string();
+                if session_id.is_empty() {
+                    return None;
+                }
+                let usage_time = s["usage_time"].as_i64().unwrap_or(0);
+                Some(TraeSessionEntry {
+                    session_id,
+                    usage_time,
+                    artifact_path: manifest_session_path.clone(),
+                })
+            })
             .collect();
 
-        for s in &sessions {
-            let sid = s["session_id"].as_str().unwrap_or("?").to_string();
-            let ut = s["usage_time"].as_i64().unwrap_or(0);
-            if existing_ids.insert(sid.clone()) {
-                next_manifest.sessions.push(TraeSessionEntry {
-                    session_id: sid,
-                    usage_time: ut,
-                    artifact_path: format!("sessions/{}", artifact_filename),
-                });
-            }
-        }
-
-        // Garbage-collect old artifacts not referenced by the manifest.
-        next_manifest.sessions.sort_by_key(|e| e.usage_time);
-        next_manifest
-            .sessions
-            .dedup_by_key(|e| e.session_id.clone());
+        next_manifest.sessions = merge_manifest_sessions(next_manifest.sessions, incoming_sessions);
 
         let valid_paths: std::collections::HashSet<String> = next_manifest
             .sessions
@@ -1393,6 +1429,80 @@ pub mod sync {
             let (pid, _) = read_sync_lock(&cache_dir.join("sync.lock")).expect("readable");
             assert_eq!(pid, std::process::id());
             drop(guard);
+        }
+
+        #[test]
+        fn test_merge_manifest_upsert_prefers_newer_usage_time() {
+            let existing = vec![
+                TraeSessionEntry {
+                    session_id: "session-stable".to_string(),
+                    usage_time: 1_700_000_000,
+                    artifact_path: "sessions/old.json".to_string(),
+                },
+                TraeSessionEntry {
+                    session_id: "session-older".to_string(),
+                    usage_time: 1_600_000_000,
+                    artifact_path: "sessions/older.json".to_string(),
+                },
+            ];
+
+            let incoming = vec![
+                TraeSessionEntry {
+                    session_id: "session-stable".to_string(),
+                    usage_time: 1_700_000_001,
+                    artifact_path: "sessions/newer.json".to_string(),
+                },
+                TraeSessionEntry {
+                    session_id: "session-older".to_string(),
+                    usage_time: 1_500_000_000,
+                    artifact_path: "sessions/should-not-win.json".to_string(),
+                },
+                TraeSessionEntry {
+                    session_id: "session-new".to_string(),
+                    usage_time: 1_800_000_000,
+                    artifact_path: "sessions/new.json".to_string(),
+                },
+            ];
+
+            let merged = merge_manifest_sessions(existing, incoming);
+            merged.iter().for_each(|entry| {
+                if entry.session_id == "session-stable" {
+                    assert_eq!(entry.usage_time, 1_700_000_001);
+                    assert_eq!(entry.artifact_path, "sessions/newer.json");
+                }
+                if entry.session_id == "session-older" {
+                    assert_eq!(entry.usage_time, 1_600_000_000);
+                    assert_eq!(entry.artifact_path, "sessions/older.json");
+                }
+            });
+            assert_eq!(merged.len(), 3);
+        }
+
+        #[test]
+        fn test_merge_manifest_session_batch_dedups_same_session() {
+            let existing = vec![];
+            let incoming = vec![
+                TraeSessionEntry {
+                    session_id: "session-dupe".to_string(),
+                    usage_time: 1_000,
+                    artifact_path: "sessions/first.json".to_string(),
+                },
+                TraeSessionEntry {
+                    session_id: "session-dupe".to_string(),
+                    usage_time: 1_200,
+                    artifact_path: "sessions/second.json".to_string(),
+                },
+                TraeSessionEntry {
+                    session_id: "session-dupe".to_string(),
+                    usage_time: 1_200,
+                    artifact_path: "sessions/zzz.json".to_string(),
+                },
+            ];
+            let merged = merge_manifest_sessions(existing, incoming);
+            assert_eq!(merged.len(), 1);
+            assert_eq!(merged[0].session_id, "session-dupe");
+            assert_eq!(merged[0].usage_time, 1_200);
+            assert_eq!(merged[0].artifact_path, "sessions/zzz.json");
         }
     }
 }

@@ -494,10 +494,9 @@ impl DataLoader {
                 0.0
             };
             model_entry.cost += msg_cost;
-            model_entry.performance.record_message(
-                positive_unified_token_total(&msg.tokens),
-                msg.duration_ms,
-            );
+            model_entry
+                .performance
+                .record_message(positive_unified_token_total(&msg.tokens), msg.duration_ms);
 
             let session_key = format!("{}:{}", msg.client, msg.session_id);
             let model_sessions = model_session_ids.entry(key).or_default();

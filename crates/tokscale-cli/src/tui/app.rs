@@ -2091,6 +2091,7 @@ mod tests {
         assert_eq!(app.current_tab, Tab::Overview);
 
         for expected in [
+            Tab::Usage,
             Tab::Models,
             Tab::Daily,
             Tab::Hourly,

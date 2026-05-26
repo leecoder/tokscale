@@ -1,8 +1,8 @@
 use anyhow::Result;
 use serde::Deserialize;
 
-use super::{UsageMetric, UsageOutput};
 use super::helpers::capitalize;
+use super::{UsageMetric, UsageOutput};
 
 const CLIENT_ID: &str = "17e5f671-d194-4dfb-9706-5516cb48c098";
 
@@ -60,7 +60,10 @@ struct Membership {
 
 fn read_credentials() -> Result<Credentials> {
     let home = dirs::home_dir().unwrap_or_else(|| std::path::PathBuf::from("."));
-    let path = home.join(".kimi").join("credentials").join("kimi-code.json");
+    let path = home
+        .join(".kimi")
+        .join("credentials")
+        .join("kimi-code.json");
     if !path.exists() {
         anyhow::bail!("No Kimi credentials found. Run 'kimi' to log in.");
     }
@@ -70,7 +73,10 @@ fn read_credentials() -> Result<Credentials> {
 
 fn save_credentials(access_token: &str, refresh_token: &str, expires_in: i64) {
     let home = dirs::home_dir().unwrap_or_else(|| std::path::PathBuf::from("."));
-    let path = home.join(".kimi").join("credentials").join("kimi-code.json");
+    let path = home
+        .join(".kimi")
+        .join("credentials")
+        .join("kimi-code.json");
     let expires_at = chrono::Utc::now().timestamp() as f64 + expires_in as f64;
     let json = serde_json::json!({
         "access_token": access_token,
@@ -153,7 +159,10 @@ fn parse_quota_detail(label: &str, detail: &QuotaDetail) -> Option<UsageMetric> 
 
 pub fn has_credentials() -> bool {
     let home = dirs::home_dir().unwrap_or_else(|| std::path::PathBuf::from("."));
-    home.join(".kimi").join("credentials").join("kimi-code.json").exists()
+    home.join(".kimi")
+        .join("credentials")
+        .join("kimi-code.json")
+        .exists()
 }
 
 pub fn fetch() -> Result<UsageOutput> {
@@ -177,7 +186,9 @@ pub fn fetch() -> Result<UsageOutput> {
                 if let Ok(refreshed) = refresh_token(&client, rt_str).await {
                     if let Some(new_token) = refreshed.access_token.clone() {
                         access_token = new_token;
-                        if let (Some(new_rt), Some(expires_in)) = (&refreshed.refresh_token, refreshed.expires_in) {
+                        if let (Some(new_rt), Some(expires_in)) =
+                            (&refreshed.refresh_token, refreshed.expires_in)
+                        {
                             stored_refresh_token = Some(new_rt.clone());
                             save_credentials(&access_token, new_rt, expires_in);
                         }
@@ -197,7 +208,9 @@ pub fn fetch() -> Result<UsageOutput> {
                     .access_token
                     .clone()
                     .ok_or_else(|| anyhow::anyhow!("Refresh returned no token."))?;
-                if let (Some(new_rt), Some(expires_in)) = (&refreshed.refresh_token, refreshed.expires_in) {
+                if let (Some(new_rt), Some(expires_in)) =
+                    (&refreshed.refresh_token, refreshed.expires_in)
+                {
                     save_credentials(&new, new_rt, expires_in);
                 }
                 fetch_usage(&client, &new).await?
@@ -205,12 +218,12 @@ pub fn fetch() -> Result<UsageOutput> {
             Err(e) => return Err(e),
         };
 
-        let plan = resp.user.as_ref()
+        let plan = resp
+            .user
+            .as_ref()
             .and_then(|u| u.membership.as_ref())
             .and_then(|m| m.level.as_ref())
-            .map(|l| {
-                capitalize(l.trim_start_matches("LEVEL_").replace('_', " ").as_str())
-            });
+            .map(|l| capitalize(l.trim_start_matches("LEVEL_").replace('_', " ").as_str()));
 
         let mut metrics = Vec::new();
         let mut seen = std::collections::HashSet::new();
@@ -224,7 +237,12 @@ pub fn fetch() -> Result<UsageOutput> {
                         _ => "Weekly",
                     };
                     if let Some(metric) = parse_quota_detail(label, detail) {
-                        let key = format!("{}:{}:{}", label, metric.used_percent, metric.remaining_label.as_deref().unwrap_or(""));
+                        let key = format!(
+                            "{}:{}:{}",
+                            label,
+                            metric.used_percent,
+                            metric.remaining_label.as_deref().unwrap_or("")
+                        );
                         if seen.insert(key) {
                             metrics.push(metric);
                         }
@@ -236,7 +254,12 @@ pub fn fetch() -> Result<UsageOutput> {
         // Parse top-level usage as "Weekly" (deduplicate against session)
         if let Some(ref usage) = resp.usage {
             if let Some(metric) = parse_quota_detail("Weekly", usage) {
-                let key = format!("{}:{}:{}", "Weekly", metric.used_percent, metric.remaining_label.as_deref().unwrap_or(""));
+                let key = format!(
+                    "{}:{}:{}",
+                    "Weekly",
+                    metric.used_percent,
+                    metric.remaining_label.as_deref().unwrap_or("")
+                );
                 if seen.insert(key) {
                     metrics.push(metric);
                 }

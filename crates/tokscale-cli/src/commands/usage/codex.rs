@@ -2,8 +2,8 @@ use anyhow::Result;
 use chrono::{TimeZone, Utc};
 use serde::Deserialize;
 
-use super::{UsageMetric, UsageOutput};
 use super::helpers::capitalize;
+use super::{UsageMetric, UsageOutput};
 
 const CLIENT_ID: &str = "app_EMoamEEZ73f0CkXaXp7hrann";
 
@@ -72,7 +72,12 @@ fn read_credentials() -> Result<(Auth, CredentialSource)> {
             let content = std::fs::read_to_string(p)?;
             if let Ok(auth) = serde_json::from_str::<Auth>(&content) {
                 // Only accept if tokens contains a usable access_token
-                if auth.tokens.as_ref().and_then(|t| t.access_token.as_ref()).is_some() {
+                if auth
+                    .tokens
+                    .as_ref()
+                    .and_then(|t| t.access_token.as_ref())
+                    .is_some()
+                {
                     return Ok((auth, CredentialSource::File(p.clone())));
                 }
             }
@@ -82,7 +87,12 @@ fn read_credentials() -> Result<(Auth, CredentialSource)> {
     // macOS keychain fallback
     if let Ok(raw) = super::helpers::read_keychain("Codex Auth") {
         if let Ok(auth) = serde_json::from_str::<Auth>(&raw) {
-            if auth.tokens.as_ref().and_then(|t| t.access_token.as_ref()).is_some() {
+            if auth
+                .tokens
+                .as_ref()
+                .and_then(|t| t.access_token.as_ref())
+                .is_some()
+            {
                 return Ok((auth, CredentialSource::Keychain));
             }
         }
@@ -127,11 +137,19 @@ fn save_credentials(
 pub fn has_credentials() -> bool {
     let home = dirs::home_dir().unwrap_or_else(|| std::path::PathBuf::from("."));
     if let Ok(codex_home) = std::env::var("CODEX_HOME") {
-        if std::path::PathBuf::from(codex_home).join("auth.json").exists() {
+        if std::path::PathBuf::from(codex_home)
+            .join("auth.json")
+            .exists()
+        {
             return true;
         }
     }
-    if home.join(".config").join("codex").join("auth.json").exists() {
+    if home
+        .join(".config")
+        .join("codex")
+        .join("auth.json")
+        .exists()
+    {
         return true;
     }
     if home.join(".codex").join("auth.json").exists() {
@@ -156,12 +174,19 @@ async fn refresh_token(client: &reqwest::Client, rt: &str) -> Result<Refresh> {
     Ok(resp.json().await?)
 }
 
-async fn fetch_usage(client: &reqwest::Client, token: &str, account_id: Option<&str>) -> Result<Usage> {
+async fn fetch_usage(
+    client: &reqwest::Client,
+    token: &str,
+    account_id: Option<&str>,
+) -> Result<Usage> {
     let mut req = client
         .get("https://chatgpt.com/backend-api/wham/usage")
         .header("Authorization", format!("Bearer {token}"))
         .header("Accept", "application/json")
-        .header("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)");
+        .header(
+            "User-Agent",
+            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)",
+        );
     if let Some(id) = account_id {
         req = req.header("ChatGPT-Account-Id", id);
     }
@@ -209,7 +234,9 @@ pub fn fetch() -> Result<UsageOutput> {
                     .clone()
                     .ok_or_else(|| anyhow::anyhow!("Refresh returned no token."))?;
                 if let CredentialSource::File(ref path) = source {
-                    let new_rt = refreshed.refresh_token.as_deref()
+                    let new_rt = refreshed
+                        .refresh_token
+                        .as_deref()
                         .unwrap_or_else(|| tokens.refresh_token.as_deref().unwrap_or(""));
                     save_credentials(
                         path,
@@ -234,7 +261,9 @@ pub fn fetch() -> Result<UsageOutput> {
                     used_percent: pct,
                     remaining_percent: 100.0 - pct,
                     remaining_label: None,
-                    resets_at: w.reset_at.and_then(|ts| Utc.timestamp_opt(ts, 0).single())
+                    resets_at: w
+                        .reset_at
+                        .and_then(|ts| Utc.timestamp_opt(ts, 0).single())
                         .map(|dt| dt.to_rfc3339()),
                 });
             }
@@ -245,7 +274,9 @@ pub fn fetch() -> Result<UsageOutput> {
                     used_percent: pct,
                     remaining_percent: 100.0 - pct,
                     remaining_label: None,
-                    resets_at: w.reset_at.and_then(|ts| Utc.timestamp_opt(ts, 0).single())
+                    resets_at: w
+                        .reset_at
+                        .and_then(|ts| Utc.timestamp_opt(ts, 0).single())
                         .map(|dt| dt.to_rfc3339()),
                 });
             }

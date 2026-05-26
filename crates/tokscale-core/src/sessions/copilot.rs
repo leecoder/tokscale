@@ -625,7 +625,9 @@ fn duration_ms_from_value(value: &Value) -> Option<i64> {
     if let Some(parts) = value.as_array() {
         let seconds = parts.first().and_then(value_as_i64)?;
         let nanos = parts.get(1).and_then(value_as_i64).unwrap_or(0);
-        let duration = seconds.saturating_mul(1000).saturating_add(nanos / 1_000_000);
+        let duration = seconds
+            .saturating_mul(1000)
+            .saturating_add(nanos / 1_000_000);
         return (duration > 0).then_some(duration);
     }
 

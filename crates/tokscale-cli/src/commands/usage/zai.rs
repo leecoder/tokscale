@@ -1,8 +1,8 @@
 use anyhow::Result;
 use serde::Deserialize;
 
-use super::{UsageMetric, UsageOutput};
 use super::helpers::capitalize;
+use super::{UsageMetric, UsageOutput};
 
 #[derive(Debug, Deserialize)]
 struct QuotaResp {
@@ -67,7 +67,9 @@ async fn fetch_sub(client: &reqwest::Client, key: &str) -> Result<SubResp> {
 }
 
 pub fn has_credentials() -> bool {
-    std::env::var("ZAI_API_KEY").or_else(|_| std::env::var("GLM_API_KEY")).is_ok()
+    std::env::var("ZAI_API_KEY")
+        .or_else(|_| std::env::var("GLM_API_KEY"))
+        .is_ok()
 }
 
 pub fn fetch() -> Result<UsageOutput> {
@@ -88,13 +90,19 @@ pub fn fetch() -> Result<UsageOutput> {
             .and_then(|s| s.data.as_ref())
             .and_then(|d| d.first())
             .and_then(|s| s.product_name.clone())
-            .or_else(|| quota.data.as_ref().and_then(|d| d.level.clone()).map(|l| capitalize(&l)));
+            .or_else(|| {
+                quota
+                    .data
+                    .as_ref()
+                    .and_then(|d| d.level.clone())
+                    .map(|l| capitalize(&l))
+            });
 
         let mut session_metric = None;
         let mut weekly_metric = None;
         let mut search_metric = None;
 
-        if let Some(ref limits) = quota.data.as_ref().and_then(|d| d.limits.as_ref()) {
+        if let Some(limits) = quota.data.as_ref().and_then(|d| d.limits.as_ref()) {
             for limit in limits.iter() {
                 let pct = limit.percentage.unwrap_or(0.0).clamp(0.0, 100.0);
 
@@ -109,10 +117,16 @@ pub fn fetch() -> Result<UsageOutput> {
                         };
                         match (limit.unit, limit.number) {
                             (Some(3), Some(5)) => {
-                                session_metric = Some(UsageMetric { label: "Session".into(), ..metric });
+                                session_metric = Some(UsageMetric {
+                                    label: "Session".into(),
+                                    ..metric
+                                });
                             }
                             (Some(6), Some(1)) => {
-                                weekly_metric = Some(UsageMetric { label: "Weekly".into(), ..metric });
+                                weekly_metric = Some(UsageMetric {
+                                    label: "Weekly".into(),
+                                    ..metric
+                                });
                             }
                             _ => {}
                         }
@@ -137,9 +151,15 @@ pub fn fetch() -> Result<UsageOutput> {
         }
 
         let mut metrics = Vec::new();
-        if let Some(m) = session_metric { metrics.push(m); }
-        if let Some(m) = weekly_metric { metrics.push(m); }
-        if let Some(m) = search_metric { metrics.push(m); }
+        if let Some(m) = session_metric {
+            metrics.push(m);
+        }
+        if let Some(m) = weekly_metric {
+            metrics.push(m);
+        }
+        if let Some(m) = search_metric {
+            metrics.push(m);
+        }
 
         Ok(UsageOutput {
             provider: "Z.ai".into(),

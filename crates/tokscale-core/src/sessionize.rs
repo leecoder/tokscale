@@ -227,11 +227,21 @@ fn compute_max_concurrent(intervals: &[SessionInterval]) -> u32 {
 /// Compute per-day active time (ms) from session intervals.
 ///
 /// For each interval, distributes its `active_duration_ms` proportionally
-/// across the UTC days it spans. Single-day sessions get their full active
+/// across local-time days for the active timezone. Single-day sessions get their full active
 /// time assigned to that day.
 pub fn compute_daily_active_time(
     intervals: &[SessionInterval],
 ) -> std::collections::HashMap<String, i64> {
+    compute_daily_active_time_with_timezone(intervals, &chrono::Local)
+}
+
+fn compute_daily_active_time_with_timezone<Tz>(
+    intervals: &[SessionInterval],
+    timezone: &Tz,
+) -> std::collections::HashMap<String, i64>
+where
+    Tz: chrono::TimeZone,
+{
     use std::collections::HashMap;
 
     let mut daily: HashMap<String, i64> = HashMap::new();
@@ -241,25 +251,49 @@ pub fn compute_daily_active_time(
             continue;
         }
 
-        let start_date = ts_to_date(interval.start_ts);
-        let end_date = ts_to_date(interval.end_ts);
+        let start_date = match local_date(interval.start_ts, timezone) {
+            Some(date) => date,
+            None => continue,
+        };
+        let end_date = match local_date(interval.end_ts, timezone) {
+            Some(date) => date,
+            None => continue,
+        };
 
-        if start_date == end_date {
-            *daily.entry(start_date).or_default() += interval.active_duration_ms;
-        } else {
-            let wall = interval.wall_duration_ms.max(1);
-            let days = dates_between(&start_date, &end_date);
-            for day in &days {
-                let day_start = date_to_ts(day);
-                let day_end = day_start + 86_400_000;
-                let overlap_start = interval.start_ts.max(day_start);
-                let overlap_end = interval.end_ts.min(day_end);
-                let overlap = (overlap_end - overlap_start).max(0);
-                let proportion = overlap as f64 / wall as f64;
-                let active_for_day = (interval.active_duration_ms as f64 * proportion) as i64;
-                if active_for_day > 0 {
-                    *daily.entry(day.clone()).or_default() += active_for_day;
-                }
+        let wall = interval.wall_duration_ms.max(1);
+        let mut day = start_date;
+
+        loop {
+            let day_key = day.format("%Y-%m-%d").to_string();
+            let Some(day_start) = local_day_start(day, timezone) else {
+                break;
+            };
+
+            let Some(next_day) = day.succ_opt() else {
+                break;
+            };
+            let Some(next_day_start) = local_day_start(next_day, timezone) else {
+                break;
+            };
+
+            let overlap_start = interval.start_ts.max(day_start);
+            let overlap_end = interval.end_ts.min(next_day_start);
+            let overlap = (overlap_end - overlap_start).max(0);
+            let proportion = overlap as f64 / wall as f64;
+            let active_for_day = (interval.active_duration_ms as f64 * proportion) as i64;
+
+            if active_for_day > 0 {
+                *daily.entry(day_key).or_default() += active_for_day;
+            }
+
+            if day == end_date {
+                break;
+            }
+
+            if let Some(next) = day.succ_opt() {
+                day = next;
+            } else {
+                break;
             }
         }
     }
@@ -267,81 +301,32 @@ pub fn compute_daily_active_time(
     daily
 }
 
-fn ts_to_date(ts_ms: i64) -> String {
-    let secs = ts_ms / 1000;
-    let days = secs / 86400;
-    let (y, m, d) = days_to_ymd(days);
-    format!("{:04}-{:02}-{:02}", y, m, d)
+fn local_date<Tz>(timestamp_ms: i64, timezone: &Tz) -> Option<chrono::NaiveDate>
+where
+    Tz: chrono::TimeZone,
+{
+    timezone
+        .timestamp_millis_opt(timestamp_ms)
+        .single()
+        .map(|datetime| datetime.date_naive())
 }
 
-fn date_to_ts(date: &str) -> i64 {
-    let parts: Vec<&str> = date.split('-').collect();
-    if parts.len() != 3 {
-        return 0;
+fn local_day_start<Tz>(date: chrono::NaiveDate, timezone: &Tz) -> Option<i64>
+where
+    Tz: chrono::TimeZone,
+{
+    let midnight = date.and_time(chrono::NaiveTime::MIN);
+    match timezone.from_local_datetime(&midnight) {
+        chrono::LocalResult::Single(datetime) => Some(datetime.timestamp_millis()),
+        chrono::LocalResult::Ambiguous(earliest, _) => Some(earliest.timestamp_millis()),
+        chrono::LocalResult::None => None,
     }
-    let y: i64 = parts[0].parse().unwrap_or(0);
-    let m: i64 = parts[1].parse().unwrap_or(0);
-    let d: i64 = parts[2].parse().unwrap_or(0);
-    ymd_to_days(y, m, d) * 86400 * 1000
-}
-
-fn days_to_ymd(mut days: i64) -> (i64, i64, i64) {
-    days += 719468;
-    let era = if days >= 0 { days } else { days - 146096 } / 146097;
-    let doe = days - era * 146097;
-    let yoe = (doe - doe / 1460 + doe / 36524 - doe / 146096) / 365;
-    let y = yoe + era * 400;
-    let doy = doe - (365 * yoe + yoe / 4 - yoe / 100);
-    let mp = (5 * doy + 2) / 153;
-    let d = doy - (153 * mp + 2) / 5 + 1;
-    let m = if mp < 10 { mp + 3 } else { mp - 9 };
-    let y = if m <= 2 { y + 1 } else { y };
-    (y, m, d)
-}
-
-fn ymd_to_days(y: i64, m: i64, d: i64) -> i64 {
-    let y = if m <= 2 { y - 1 } else { y };
-    let era = if y >= 0 { y } else { y - 399 } / 400;
-    let yoe = y - era * 400;
-    let m_adj = if m > 2 { m - 3 } else { m + 9 };
-    let doy = (153 * m_adj + 2) / 5 + d - 1;
-    let doe = yoe * 365 + yoe / 4 - yoe / 100 + doy;
-    era * 146097 + doe - 719468
-}
-
-fn dates_between(start: &str, end: &str) -> Vec<String> {
-    let start_days = {
-        let parts: Vec<&str> = start.split('-').collect();
-        if parts.len() != 3 {
-            return vec![start.to_string()];
-        }
-        let y: i64 = parts[0].parse().unwrap_or(0);
-        let m: i64 = parts[1].parse().unwrap_or(0);
-        let d: i64 = parts[2].parse().unwrap_or(0);
-        ymd_to_days(y, m, d)
-    };
-    let end_days = {
-        let parts: Vec<&str> = end.split('-').collect();
-        if parts.len() != 3 {
-            return vec![start.to_string()];
-        }
-        let y: i64 = parts[0].parse().unwrap_or(0);
-        let m: i64 = parts[1].parse().unwrap_or(0);
-        let d: i64 = parts[2].parse().unwrap_or(0);
-        ymd_to_days(y, m, d)
-    };
-
-    let mut result = Vec::new();
-    for day in start_days..=end_days {
-        let (y, m, d) = days_to_ymd(day);
-        result.push(format!("{:04}-{:02}-{:02}", y, m, d));
-    }
-    result
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use chrono::{FixedOffset, TimeZone};
 
     fn make_msg(client: &str, session_id: &str, timestamp: i64) -> UnifiedMessage {
         UnifiedMessage {
@@ -605,5 +590,39 @@ mod tests {
 
         let metrics = compute_time_metrics(&intervals, DEFAULT_IDLE_GAP_MS);
         assert_eq!(metrics.longest_continuous_ms, 120_000);
+    }
+
+    #[test]
+    fn test_compute_daily_active_time_matches_local_day_boundaries_for_fixed_offset() {
+        let interval = SessionInterval {
+            client: "trae".to_string(),
+            session_id: "session-local-boundary".to_string(),
+            start_ts: FixedOffset::east_opt(9 * 3600)
+                .unwrap()
+                .with_ymd_and_hms(2026, 1, 1, 23, 30, 0)
+                .single()
+                .unwrap()
+                .timestamp_millis(),
+            end_ts: FixedOffset::east_opt(9 * 3600)
+                .unwrap()
+                .with_ymd_and_hms(2026, 1, 2, 0, 30, 0)
+                .single()
+                .unwrap()
+                .timestamp_millis(),
+            wall_duration_ms: 3_600_000,
+            active_duration_ms: 3_600_000,
+            message_count: 2,
+            tokens: TokenBreakdown::default(),
+            cost: 0.0,
+        };
+
+        let daily = compute_daily_active_time_with_timezone(
+            &[interval],
+            &FixedOffset::east_opt(9 * 3600).unwrap(),
+        );
+
+        assert_eq!(daily.get("2026-01-01"), Some(&1_800_000));
+        assert_eq!(daily.get("2026-01-02"), Some(&1_800_000));
+        assert_eq!(daily.len(), 2);
     }
 }

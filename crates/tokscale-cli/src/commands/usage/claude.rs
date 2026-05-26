@@ -1,8 +1,8 @@
 use anyhow::Result;
 use serde::Deserialize;
 
-use super::{UsageMetric, UsageOutput};
 use super::helpers::capitalize;
+use super::{UsageMetric, UsageOutput};
 
 const CLIENT_ID: &str = "9d1c250a-e61b-44d9-88ed-5944d1962f5e";
 const BETA_HEADER: &str = "oauth-2025-04-20";
@@ -75,7 +75,12 @@ fn read_credentials() -> Result<(Credentials, CredentialSource)> {
     Ok((creds, CredentialSource::Keychain))
 }
 
-fn save_credentials(access_token: &str, refresh_token: &str, subscription_type: Option<&str>, rate_limit_tier: Option<&str>) {
+fn save_credentials(
+    access_token: &str,
+    refresh_token: &str,
+    subscription_type: Option<&str>,
+    rate_limit_tier: Option<&str>,
+) {
     let home = dirs::home_dir().unwrap_or_else(|| std::path::PathBuf::from("."));
     let path = home.join(".claude").join(".credentials.json");
     let mut oauth = serde_json::json!({
@@ -165,9 +170,10 @@ pub fn fetch() -> Result<UsageOutput> {
             .clone()
             .ok_or_else(|| anyhow::anyhow!("No Claude access token."))?;
         let plan = oauth.subscription_type.as_ref().map(|s| {
-            let tier = oauth.rate_limit_tier.as_deref().and_then(|t| {
-                t.rsplit('_').next()
-            });
+            let tier = oauth
+                .rate_limit_tier
+                .as_deref()
+                .and_then(|t| t.rsplit('_').next());
             match tier {
                 Some(mult) => format!("{} {}", capitalize(s), mult),
                 None => capitalize(s),

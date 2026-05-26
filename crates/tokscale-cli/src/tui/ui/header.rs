@@ -176,7 +176,7 @@ mod tests {
         let mut app = make_app(80);
 
         render_header(&mut app, 80);
-        click_header(&mut app, 26);
+        click_header(&mut app, 38);
 
         assert_eq!(app.current_tab, Tab::Daily);
     }
@@ -186,7 +186,7 @@ mod tests {
         let mut app = make_app(59);
 
         render_header(&mut app, 59);
-        click_header(&mut app, 18);
+        click_header(&mut app, 27);
 
         assert_eq!(app.current_tab, Tab::Daily);
     }

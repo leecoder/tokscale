@@ -490,8 +490,7 @@ pub fn show_qr(yes: bool) -> Result<()> {
     );
     println!(
         "  {}",
-        "Anyone who can see your terminal (screen share, recording, camera)"
-            .bright_black()
+        "Anyone who can see your terminal (screen share, recording, camera)".bright_black()
     );
     println!(
         "  {}",
@@ -501,9 +500,7 @@ pub fn show_qr(yes: bool) -> Result<()> {
 
     if !yes {
         if !std::io::stdin().is_terminal() {
-            anyhow::bail!(
-                "Refusing to render token QR: stdin is not a TTY. Pass --yes to bypass."
-            );
+            anyhow::bail!("Refusing to render token QR: stdin is not a TTY. Pass --yes to bypass.");
         }
         print!("  Continue? [y/N] ");
         std::io::stdout().flush().ok();

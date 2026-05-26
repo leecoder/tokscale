@@ -174,7 +174,7 @@ mod tests {
         assert_eq!(m.tokens.cache_write, 100);
         assert_eq!(m.cost, 0.5);
         // timestamp: epoch seconds → ms
-        assert_eq!(m.timestamp, 1776000000_000);
+        assert_eq!(m.timestamp, 1_776_000_000_000);
     }
 
     #[test]
