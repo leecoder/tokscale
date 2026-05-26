@@ -77,6 +77,7 @@
 | <img width="48px" src=".github/assets/client-antigravity.png" alt="Antigravity" /> | [Google Antigravity](https://antigravity.google/) | `tokscale antigravity sync`로 `~/.config/tokscale/antigravity-cache/sessions/*.jsonl`에 캐싱 (로컬 언어 서버 RPC 사용) | ✅ 지원 |
 | <img width="48px" src=".github/assets/client-trae.png" alt="Trae" /> | [Trae IDE](https://www.trae.ai/) / [Trae Solo](https://www.trae.ai/solo) (국제판) | `tokscale trae sync`로 `~/.config/tokscale/trae-cache/sessions/*.json`에 캐싱 (공식 API의 계정 단위 사용량) | ✅ 지원 |
 | <img width="48px" src=".github/assets/client-zed.webp" alt="Zed Agent" /> | [Zed Agent](https://zed.dev/docs/ai/agent-panel) | `~/.local/share/zed/threads/threads.db` (macOS: `~/Library/Application Support/Zed/threads/threads.db`; Windows: `%LOCALAPPDATA%/Zed/threads/threads.db`; 호스팅된 Zed 모델 전용, 외부 ACP 에이전트 제외) | ✅ 지원 |
+| Kiro | Kiro | `~/.kiro/sessions/cli/*.json` (+ `*.jsonl`) 및 `~/.local/share/kiro-cli/data.sqlite3` (macOS: `~/Library/Application Support/kiro-cli/data.sqlite3`) | ✅ 지원 |
 | <img width="48px" src=".github/assets/client-synthetic.png" alt="Synthetic" /> | [Synthetic](https://synthetic.new/) | `hf:` 모델/`synthetic` provider 감지로 다른 소스에서 재귀속 (+ [Octofriend](https://github.com/synthetic-lab/octofriend): `~/.local/share/octofriend/sqlite.db`) | ✅ 지원 |
 
 [🚅 LiteLLM의 가격 데이터](https://github.com/BerriAI/litellm)를 사용해 **실시간 비용 계산**을 제공합니다. 구간별 가격 모델(대용량 컨텍스트 등)과 **캐시 토큰 할인**도 지원합니다.
@@ -144,7 +145,7 @@ AI 지원 개발 시대에 **토큰은 새로운 에너지**입니다. 토큰은
   - 9가지 테마의 GitHub 스타일 기여 그래프
   - 실시간 필터링 및 정렬
   - 깜빡임 없는 렌더링
-- **멀티 플랫폼 지원** - OpenCode, Claude Code, Codex CLI, Copilot CLI, Cursor IDE, Gemini CLI, Amp, Codebuff, Droid, OpenClaw, Hermes Agent, Pi, Kimi CLI, Qwen CLI, Roo Code, Kilo, Mux, Kilo CLI, Crush, Goose, Antigravity, Trae, Synthetic 사용량 통합 추적
+- **멀티 플랫폼 지원** - OpenCode, Claude Code, Codex CLI, Copilot CLI, Cursor IDE, Gemini CLI, Amp, Codebuff, Droid, OpenClaw, Hermes Agent, Pi, Kimi CLI, Qwen CLI, Roo Code, Kilo, Mux, Kilo CLI, Crush, Goose, Antigravity, Zed, Kiro, Trae, Synthetic 사용량 통합 추적
 - **실시간 가격 반영** - LiteLLM에서 최신 가격을 가져와(디스크 캐시 1시간) 비용 계산; OpenRouter 자동 폴백 및 신규 모델용 Cursor 가격 지원
 - **상세 분석** - 입력, 출력, 캐시 읽기/쓰기, 추론 토큰까지 추적
 - **네이티브 Rust 코어** - 모든 파싱과 집계를 Rust로 처리해 최대 10배 빠른 성능
@@ -322,7 +323,7 @@ tokscale --client synthetic
 tokscale --client opencode,claude --week --json
 ```
 
-가능한 값: `opencode`, `claude`, `codex`, `copilot`, `gemini`, `cursor`, `amp`, `codebuff`, `droid`, `openclaw`, `hermes`, `pi`, `kimi`, `qwen`, `roocode`, `kilocode`, `kilo`, `mux`, `crush`, `goose`, `antigravity`, `trae`, `synthetic`.
+가능한 값: `opencode`, `claude`, `codex`, `copilot`, `gemini`, `cursor`, `amp`, `codebuff`, `droid`, `openclaw`, `hermes`, `pi`, `kimi`, `qwen`, `roocode`, `kilocode`, `kilo`, `mux`, `crush`, `goose`, `antigravity`, `zed`, `kiro`, `trae`, `synthetic`.
 
 > **Deprecation 안내**: 기존 단일 클라이언트 플래그 (`--opencode`, `--claude`, `--codex` 등)는 하위 호환성을 위해 여전히 동작하지만 `--help`에서 숨겨졌으며 다음 메이저 릴리스에서 제거됩니다. 가능한 한 `--client`로 마이그레이션하세요. 인터랙티브 터미널에서 레거시 플래그를 사용하면 한 줄 경고가 출력됩니다.
 
@@ -485,7 +486,7 @@ Trae([ByteDance의 AI IDE](https://www.trae.ai/))는 두 국제판 제품군을 
 - **`--variant ide`** — Trae IDE (국제판)의 자격 증명 사용
 - **`--variant solo`** — Trae Solo (국제판)의 자격 증명 사용
 
-`tokscale trae sync`는 공식 `query_user_usage_group_by_session` API를 호출하고 원본 JSON을 로컬 캐시에 저장합니다. `--solo` / `--ide`는 어떤 데스크톱 앱의 자격 증명을 사용할지만 선택하며, 별도 리포트 클라이언트를 만들지는 않습니다.
+`tokscale trae sync`는 공식 `query_user_usage_group_by_session` API를 호출하고 원본 JSON을 로컬 캐시에 저장합니다. `--variant solo` / `--variant ide`는 `login`/`logout`에서 자격 증명 출처를 선택할 때만 사용하며, sync는 저장된 Trae 토큰으로 단일 `trae` 리포트 클라이언트를 갱신합니다.
 
 ```bash
 # 로그인 (Trae 데스크톱 클라이언트에서 자격 증명 자동 감지)
@@ -497,8 +498,8 @@ tokscale trae login --manual --variant solo
 # 어떤 변형에 자격 증명이 캐시되어 있는지 확인
 tokscale trae status
 
-# 사용량을 한 번만 동기화 (플래그가 없으면 자격 증명이 있는 변형을 사용)
-tokscale trae sync --all --since 30
+# 최근 30일 사용량을 동기화
+tokscale trae sync --since 30
 
 # 특정 변형의 캐시된 자격 증명 삭제
 tokscale trae logout --variant solo
@@ -653,7 +654,7 @@ tokscale sources --json
 - **인터랙티브 툴팁**: 호버 시 상세 일별 분석 표시
 - **일별 분석 패널**: 클릭하여 소스별, 모델별 세부사항 확인
 - **연도 필터링**: 연도 간 탐색
-- **소스 필터링**: 플랫폼별 필터 (OpenCode, Claude, Codex, Copilot, Cursor, Gemini, Amp, Codebuff, Droid, OpenClaw, Hermes Agent, Pi, Kimi, Qwen, Roo Code, Kilo, Mux, Kilo CLI, Crush, Goose, Antigravity, Trae, Synthetic)
+- **소스 필터링**: 플랫폼별 필터 (OpenCode, Claude, Codex, Copilot, Cursor, Gemini, Amp, Codebuff, Droid, OpenClaw, Hermes Agent, Pi, Kimi, Qwen, Roo Code, Kilo, Mux, Kilo CLI, Crush, Goose, Antigravity, Zed, Kiro, Trae, Synthetic)
 - **통계 패널**: 총 비용, 토큰, 활동 일수, 연속 기록
 - **FOUC 방지**: React 하이드레이션 전 테마 적용 (깜빡임 없음)
 
@@ -1155,7 +1156,7 @@ Antigravity 데이터는 루트 명령에서 자동으로 가져오지 않습니
 
 위치: `~/.config/tokscale/trae-cache/sessions/*.json` (공식 사용량 API를 통해 동기화)
 
-Trae 데이터는 루트 명령에서 자동으로 가져오지 않습니다. 먼저 `tokscale trae login`을 실행한 뒤, 리포트 전에 `tokscale trae sync --ide`, `tokscale trae sync --solo` 또는 `tokscale trae sync --all`을 실행하세요. Tokscale은 동기화된 API dump를 세션 수준 레코드로 파싱하고 Trae가 반환한 비용 합계를 보존합니다.
+Trae 데이터는 루트 명령에서 자동으로 가져오지 않습니다. 먼저 `tokscale trae login`을 실행한 뒤, 리포트 전에 `tokscale trae sync` 또는 `tokscale trae sync --since 30`을 실행하세요. Tokscale은 동기화된 API dump를 세션 수준 레코드로 파싱하고 Trae가 반환한 비용 합계를 보존합니다.
 
 ### OpenClaw
 
