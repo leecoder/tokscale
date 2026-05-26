@@ -39,9 +39,5 @@ export function parseCustomDateRange(
     return null;
   }
 
-  if (!isValidDateString(from) || !isValidDateString(to)) {
-    return null;
-  }
-
   return { from, to };
 }
