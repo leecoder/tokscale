@@ -100,6 +100,42 @@ describe("POST /api/groups/[slug]/invite", () => {
     expect(mockState.createGroupInvite).not.toHaveBeenCalled();
   });
 
+  it.each(["null", "[]", "\"admin\""])(
+    "returns 400 when request body is valid JSON but not an object: %s",
+    async (body) => {
+      mockState.getSessionFromRequest.mockResolvedValue({
+        id: "user-1",
+        username: "alice",
+        displayName: null,
+        avatarUrl: null,
+      });
+      mockState.getGroupBySlug.mockResolvedValue({
+        id: "group-1",
+        slug: "team",
+        name: "Team",
+        isPublic: true,
+        createdBy: "user-2",
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        description: null,
+        avatarUrl: null,
+      });
+      mockState.getGroupMembership.mockResolvedValue({ role: "admin" });
+
+      const response = await POST(
+        new Request("http://localhost:3000/api/groups/team/invite", {
+          method: "POST",
+          body,
+        }),
+        { params: Promise.resolve({ slug: "team" }) }
+      );
+
+      expect(response.status).toBe(400);
+      expect(await response.json()).toEqual({ error: "Invalid JSON body" });
+      expect(mockState.createGroupInvite).not.toHaveBeenCalled();
+    }
+  );
+
   it("uses {} when body is empty and still creates a default invite", async () => {
     mockState.getSessionFromRequest.mockResolvedValue({
       id: "user-1",

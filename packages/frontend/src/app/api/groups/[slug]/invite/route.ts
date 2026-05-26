@@ -44,6 +44,10 @@ export async function POST(
       return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
     }
 
+    if (!body || typeof body !== "object" || Array.isArray(body)) {
+      return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+    }
+
     const role = isGroupRole(body.role) ? body.role : "member";
     const invitedUsername = typeof body.invitedUsername === "string"
       ? body.invitedUsername
