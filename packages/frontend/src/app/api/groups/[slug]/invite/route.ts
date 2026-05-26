@@ -34,9 +34,14 @@ export async function POST(
 
     let body: Record<string, unknown> = {};
     try {
-      body = await request.json();
+      const text = await request.text();
+      if (text.length === 0) {
+        body = {};
+      } else {
+        body = JSON.parse(text);
+      }
     } catch {
-      body = {};
+      return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
     }
 
     const role = isGroupRole(body.role) ? body.role : "member";
