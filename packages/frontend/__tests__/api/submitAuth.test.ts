@@ -8,7 +8,13 @@ const mockState = vi.hoisted(() => {
   const revalidateUsernamePaths = vi.fn();
   const revalidateUserGroupLeaderboards = vi.fn();
   const mergeClientBreakdowns = vi.fn();
+  const mergeClientBreakdownsWithRegressionGuard = vi.fn();
   const recalculateDayTotals = vi.fn();
+  const deriveClientBreakdownProvenance = vi.fn((breakdown) => ({
+    schemaVersion: 1,
+    messageCount: breakdown.messages ?? 0,
+    modelCount: breakdown.models ? Object.keys(breakdown.models).length : 0,
+  }));
   const buildModelBreakdown = vi.fn();
   const clientContributionToBreakdownData = vi.fn();
   const mergeTimestampMs = vi.fn();
@@ -25,7 +31,9 @@ const mockState = vi.hoisted(() => {
     revalidateUsernamePaths,
     revalidateUserGroupLeaderboards,
     mergeClientBreakdowns,
+    mergeClientBreakdownsWithRegressionGuard,
     recalculateDayTotals,
+    deriveClientBreakdownProvenance,
     buildModelBreakdown,
     clientContributionToBreakdownData,
     mergeTimestampMs,
@@ -38,7 +46,9 @@ const mockState = vi.hoisted(() => {
       revalidateUsernamePaths.mockReset();
       revalidateUserGroupLeaderboards.mockReset();
       mergeClientBreakdowns.mockReset();
+      mergeClientBreakdownsWithRegressionGuard.mockReset();
       recalculateDayTotals.mockReset();
+      deriveClientBreakdownProvenance.mockClear();
       buildModelBreakdown.mockReset();
       clientContributionToBreakdownData.mockReset();
       mergeTimestampMs.mockReset();
@@ -107,7 +117,9 @@ vi.mock("@/lib/validation/submission", () => ({
 
 vi.mock("@/lib/db/helpers", () => ({
   mergeClientBreakdowns: mockState.mergeClientBreakdowns,
+  mergeClientBreakdownsWithRegressionGuard: mockState.mergeClientBreakdownsWithRegressionGuard,
   recalculateDayTotals: mockState.recalculateDayTotals,
+  deriveClientBreakdownProvenance: mockState.deriveClientBreakdownProvenance,
   buildModelBreakdown: mockState.buildModelBreakdown,
   clientContributionToBreakdownData: mockState.clientContributionToBreakdownData,
   mergeTimestampMs: mockState.mergeTimestampMs,
@@ -524,7 +536,10 @@ describe("POST /api/submit auth path", () => {
     };
 
     mockState.clientContributionToBreakdownData.mockReturnValue(incomingBreakdown);
-    mockState.mergeClientBreakdowns.mockReturnValue(mergedBreakdown);
+    mockState.mergeClientBreakdownsWithRegressionGuard.mockReturnValue({
+      merged: mergedBreakdown,
+      warnings: [],
+    });
     mockState.recalculateDayTotals.mockReturnValue({
       tokens: 15,
       cost: 0.75,
@@ -597,9 +612,18 @@ describe("POST /api/submit auth path", () => {
       id: "submittedDevices.id",
     }));
     expect(tx.execute).toHaveBeenCalledTimes(1);
-    expect(mockState.mergeClientBreakdowns).toHaveBeenCalledWith(
+    expect(mockState.mergeClientBreakdownsWithRegressionGuard).toHaveBeenCalledWith(
       existingBreakdown,
-      { codex: mergedBreakdown.codex },
+      {
+        codex: {
+          ...mergedBreakdown.codex,
+          provenance: {
+            schemaVersion: 1,
+            messageCount: 1,
+            modelCount: 1,
+          },
+        },
+      },
       expect.any(Set)
     );
     expect(await response.json()).toEqual(expect.objectContaining({
@@ -691,9 +715,22 @@ describe("POST /api/submit auth path", () => {
         models: { "gpt-5.5": incomingBreakdown },
       },
     };
+    const incomingBreakdownWithProvenance = {
+      codex: {
+        ...mergedBreakdown.codex,
+        provenance: {
+          schemaVersion: 1,
+          messageCount: 1,
+          modelCount: 1,
+        },
+      },
+    };
 
     mockState.clientContributionToBreakdownData.mockReturnValue(incomingBreakdown);
-    mockState.mergeClientBreakdowns.mockReturnValue(mergedBreakdown);
+    mockState.mergeClientBreakdownsWithRegressionGuard.mockReturnValue({
+      merged: mergedBreakdown,
+      warnings: [],
+    });
     mockState.recalculateDayTotals.mockReturnValue({
       tokens: 15,
       cost: 0.75,
@@ -778,9 +815,9 @@ describe("POST /api/submit auth path", () => {
     expect(tx.insert).toHaveBeenCalledTimes(1);
     expect(dailyInsertValues).toBeUndefined();
     expect(tx.execute).toHaveBeenCalledTimes(2);
-    expect(mockState.mergeClientBreakdowns).toHaveBeenCalledWith(
+    expect(mockState.mergeClientBreakdownsWithRegressionGuard).toHaveBeenCalledWith(
       legacyBreakdown,
-      { codex: mergedBreakdown.codex },
+      incomingBreakdownWithProvenance,
       expect.any(Set)
     );
     expect(await response.json()).toEqual(expect.objectContaining({
@@ -857,6 +894,11 @@ describe("POST /api/submit auth path", () => {
       codex: {
         ...incomingBreakdown,
         models: { "gpt-5.5": incomingBreakdown },
+        provenance: {
+          schemaVersion: 1,
+          messageCount: 1,
+          modelCount: 1,
+        },
       },
     };
 
@@ -943,7 +985,7 @@ describe("POST /api/submit auth path", () => {
       tokens: 15,
       sourceBreakdown: insertedBreakdown,
     })]);
-    expect(mockState.mergeClientBreakdowns).not.toHaveBeenCalled();
+    expect(mockState.mergeClientBreakdownsWithRegressionGuard).not.toHaveBeenCalled();
     expect(await response.json()).toEqual(expect.objectContaining({
       success: true,
       metrics: expect.objectContaining({
