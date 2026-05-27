@@ -428,7 +428,7 @@ fn main() -> Result<()> {
             let month = date.month;
             let (since, until) = build_date_filter(today, week, month, date.since, date.until);
             let year = normalize_year_filter(today, week, month, date.year);
-            let clients = build_client_filter(clients);
+            let clients = build_client_filter(clients, &cli.home);
             if json || light || !can_use_tui {
                 run_models_report(
                     json,
@@ -474,7 +474,7 @@ fn main() -> Result<()> {
             let month = date.month;
             let (since, until) = build_date_filter(today, week, month, date.since, date.until);
             let year = normalize_year_filter(today, week, month, date.year);
-            let clients = build_client_filter(clients);
+            let clients = build_client_filter(clients, &cli.home);
             if json || light || !can_use_tui {
                 run_monthly_report(
                     json,
@@ -517,7 +517,7 @@ fn main() -> Result<()> {
             let month = date.month;
             let (since, until) = build_date_filter(today, week, month, date.since, date.until);
             let year = normalize_year_filter(today, week, month, date.year);
-            let clients = build_client_filter(clients);
+            let clients = build_client_filter(clients, &cli.home);
             if json || light || !can_use_tui {
                 run_hourly_report(
                     json,
@@ -556,10 +556,7 @@ fn main() -> Result<()> {
             reject_unsupported_home_override(&cli.home, "pricing")?;
             run_pricing_lookup(&model_id, json, provider.as_deref(), no_spinner)
         }
-        Some(Commands::Clients { json }) => {
-            reject_unsupported_home_override(&cli.home, "clients")?;
-            run_clients_command(json)
-        }
+        Some(Commands::Clients { json }) => run_clients_command(json, cli.home.clone()),
         Some(Commands::Login { token }) => {
             reject_unsupported_home_override(&cli.home, "login")?;
             run_login_command(token)
@@ -588,7 +585,7 @@ fn main() -> Result<()> {
             let month = date.month;
             let (since, until) = build_date_filter(today, week, month, date.since, date.until);
             let year = normalize_year_filter(today, week, month, date.year);
-            let clients = build_client_filter(clients);
+            let clients = build_client_filter(clients, &cli.home);
             run_graph_command(
                 output,
                 cli.home.clone(),
@@ -607,7 +604,7 @@ fn main() -> Result<()> {
             let month = date.month;
             let (since, until) = build_date_filter(today, week, month, date.since, date.until);
             let year = normalize_year_filter(today, week, month, date.year);
-            let clients = build_client_filter(clients);
+            let clients = build_client_filter(clients, &cli.home);
             auto_sync_cursor_before_tui(&cli.home, &clients)?;
             tui::run(
                 &cli.theme,
@@ -660,7 +657,7 @@ fn main() -> Result<()> {
             no_spinner: _,
         }) => {
             reject_unsupported_home_override(&cli.home, "wrapped")?;
-            let client_filter = build_client_filter(client_flags);
+            let client_filter = build_client_filter(client_flags, &cli.home);
             run_wrapped_command(
                 output,
                 year,
@@ -702,7 +699,7 @@ fn main() -> Result<()> {
             let month = date.month;
             let (since, until) = build_date_filter(today, week, month, date.since, date.until);
             let year = normalize_year_filter(today, week, month, date.year);
-            let clients = build_client_filter(clients);
+            let clients = build_client_filter(clients, &cli.home);
             run_time_metrics_report(
                 json,
                 cli.home.clone(),
@@ -743,7 +740,7 @@ fn main() -> Result<()> {
             let today = cli.date.today;
             let week = cli.date.week;
             let month = cli.date.month;
-            let clients = build_client_filter(cli.clients);
+            let clients = build_client_filter(cli.clients, &cli.home);
             let (since, until) =
                 build_date_filter(today, week, month, cli.date.since, cli.date.until);
             let year = normalize_year_filter(today, week, month, cli.date.year);
@@ -1079,8 +1076,8 @@ pub struct DateRangeFlags {
 ///
 /// Returns `None` when no filters are active *and* no defaults configured
 /// so the caller can scan all clients.
-fn build_client_filter(flags: ClientFlags) -> Option<Vec<String>> {
-    let defaults = tui::settings::load_default_clients();
+fn build_client_filter(flags: ClientFlags, home_dir: &Option<String>) -> Option<Vec<String>> {
+    let defaults = tui::settings::load_default_clients_for_home(home_dir);
     build_client_filter_with_defaults(flags, &defaults)
 }
 
@@ -1589,7 +1586,7 @@ fn run_models_report(
                 until: until.clone(),
                 year: year.clone(),
                 group_by: group_by.clone(),
-                scanner_settings: tui::settings::load_scanner_settings(),
+                scanner_settings: tui::settings::load_scanner_settings_for_home(&home_dir),
             })
             .await
         })
@@ -2350,14 +2347,14 @@ fn run_monthly_report(
     let report = rt
         .block_on(async {
             get_monthly_report(ReportOptions {
-                home_dir,
+                home_dir: home_dir.clone(),
                 use_env_roots,
                 clients,
                 since,
                 until,
                 year,
                 group_by: GroupBy::default(),
-                scanner_settings: tui::settings::load_scanner_settings(),
+                scanner_settings: tui::settings::load_scanner_settings_for_home(&home_dir),
             })
             .await
         })
@@ -2644,14 +2641,14 @@ fn run_hourly_report(
     let report = rt
         .block_on(async {
             get_hourly_report(ReportOptions {
-                home_dir,
+                home_dir: home_dir.clone(),
                 use_env_roots,
                 clients,
                 since,
                 until,
                 year,
                 group_by: GroupBy::default(),
-                scanner_settings: tui::settings::load_scanner_settings(),
+                scanner_settings: tui::settings::load_scanner_settings_for_home(&home_dir),
             })
             .await
         })
@@ -3330,19 +3327,24 @@ fn capitalize_client(client: &str) -> String {
     }
 }
 
-fn run_clients_command(json: bool) -> Result<()> {
+fn run_clients_command(json: bool, home_dir: Option<String>) -> Result<()> {
     use tokscale_core::{
         built_in_extra_scan_paths_for, extra_scan_paths_for, parse_local_clients, ClientId,
         LocalParseOptions,
     };
 
-    let home_dir =
-        dirs::home_dir().ok_or_else(|| anyhow::anyhow!("Could not determine home directory"))?;
-    let scanner_settings = tui::settings::load_scanner_settings();
+    let explicit_home_dir = home_dir;
+    let use_env_roots = use_env_roots(&explicit_home_dir);
+    let scanner_settings = tui::settings::load_scanner_settings_for_home(&explicit_home_dir);
+    let home_dir = explicit_home_dir
+        .map(PathBuf::from)
+        .or_else(dirs::home_dir)
+        .ok_or_else(|| anyhow::anyhow!("Could not determine home directory"))?;
+    let home_dir_str = home_dir.to_string_lossy().to_string();
 
     let parsed = parse_local_clients(LocalParseOptions {
-        home_dir: Some(home_dir.to_string_lossy().to_string()),
-        use_env_roots: true,
+        home_dir: Some(home_dir_str.clone()),
+        use_env_roots,
         clients: Some(
             ClientId::iter()
                 .filter(|client| client.parse_local())
@@ -3356,7 +3358,8 @@ fn run_clients_command(json: bool) -> Result<()> {
     })
     .map_err(|e| anyhow::anyhow!(e))?;
 
-    let headless_roots = get_headless_roots(&home_dir);
+    let headless_roots =
+        tokscale_core::scanner::headless_roots_with_env_strategy(&home_dir_str, use_env_roots);
     let headless_codex_count = parsed
         .messages
         .iter()
@@ -3414,20 +3417,24 @@ fn run_clients_command(json: bool) -> Result<()> {
         source: String,
     }
 
-    // Collect extra dirs from TOKSCALE_EXTRA_DIRS for display (reuse core parser)
-    let extra_dirs_val = std::env::var("TOKSCALE_EXTRA_DIRS").unwrap_or_default();
     let all_clients: std::collections::HashSet<ClientId> = ClientId::iter().collect();
-    let extra_dirs: Vec<(ClientId, String)> =
-        tokscale_core::parse_extra_dirs(&extra_dirs_val, &all_clients);
-    let built_in_extra_paths =
-        built_in_extra_scan_paths_for(&home_dir.to_string_lossy(), &all_clients);
+    let extra_dirs: Vec<(ClientId, String)> = if use_env_roots {
+        let extra_dirs_val = std::env::var("TOKSCALE_EXTRA_DIRS").unwrap_or_default();
+        tokscale_core::parse_extra_dirs(&extra_dirs_val, &all_clients)
+    } else {
+        Vec::new()
+    };
+    let built_in_extra_paths = built_in_extra_scan_paths_for(&home_dir_str, &all_clients);
     let settings_extra_dirs = extra_scan_paths_for(&scanner_settings, &all_clients);
-    let copilot_exporter_path = tokscale_core::copilot_exporter_path();
+    let copilot_exporter_path =
+        tokscale_core::copilot_exporter_path_with_env_strategy(use_env_roots);
 
     let clients: Vec<ClientRow> =
         ClientId::iter()
             .map(|client| {
-                let sessions_path = client.data().resolve_path(&home_dir.to_string_lossy());
+                let sessions_path = client
+                    .data()
+                    .resolve_path_with_env_strategy(&home_dir_str, use_env_roots);
                 let sessions_path_exists = Path::new(&sessions_path).exists();
                 let additional_paths: Vec<AdditionalPath> = built_in_extra_paths
                     .iter()
@@ -3574,7 +3581,7 @@ fn run_clients_command(json: bool) -> Result<()> {
                 "  {}",
                 format!(
                     "sessions: {}",
-                    describe_path(&row.sessions_path, row.sessions_path_exists)
+                    describe_path_for_home(&row.sessions_path, row.sessions_path_exists, &home_dir)
                 )
                 .bright_black()
             );
@@ -3583,7 +3590,7 @@ fn run_clients_command(json: bool) -> Result<()> {
                 let additional_desc: Vec<String> = row
                     .additional_paths
                     .iter()
-                    .map(|ap| describe_path(&ap.path, ap.exists))
+                    .map(|ap| describe_path_for_home(&ap.path, ap.exists, &home_dir))
                     .collect();
                 println!(
                     "  {}",
@@ -3595,7 +3602,7 @@ fn run_clients_command(json: bool) -> Result<()> {
                 let legacy_desc: Vec<String> = row
                     .legacy_paths
                     .iter()
-                    .map(|lp| describe_path(&lp.path, lp.exists))
+                    .map(|lp| describe_path_for_home(&lp.path, lp.exists, &home_dir))
                     .collect();
                 println!(
                     "  {}",
@@ -3608,7 +3615,7 @@ fn run_clients_command(json: bool) -> Result<()> {
                     .extra_paths
                     .iter()
                     .filter(|ep| ep.source == "settings")
-                    .map(|ep| describe_path(&ep.path, ep.exists))
+                    .map(|ep| describe_path_for_home(&ep.path, ep.exists, &home_dir))
                     .collect();
                 if !settings_desc.is_empty() {
                     println!(
@@ -3621,7 +3628,7 @@ fn run_clients_command(json: bool) -> Result<()> {
                     .extra_paths
                     .iter()
                     .filter(|ep| ep.source == "env")
-                    .map(|ep| describe_path(&ep.path, ep.exists))
+                    .map(|ep| describe_path_for_home(&ep.path, ep.exists, &home_dir))
                     .collect();
                 if !env_desc.is_empty() {
                     println!(
@@ -3642,7 +3649,7 @@ fn run_clients_command(json: bool) -> Result<()> {
                 let headless_desc: Vec<String> = row
                     .headless_paths
                     .iter()
-                    .map(|hp| describe_path(&hp.path, hp.exists))
+                    .map(|hp| describe_path_for_home(&hp.path, hp.exists, &home_dir))
                     .collect();
                 println!(
                     "  {}",
@@ -3694,12 +3701,8 @@ fn get_headless_roots(home_dir: &Path) -> Vec<PathBuf> {
     roots
 }
 
-fn describe_path(path: &str, exists: bool) -> String {
-    let path_display = if let Some(home) = dirs::home_dir() {
-        path.replace(&home.to_string_lossy().to_string(), "~")
-    } else {
-        path.to_string()
-    };
+fn describe_path_for_home(path: &str, exists: bool, home: &Path) -> String {
+    let path_display = path.replace(&home.to_string_lossy().to_string(), "~");
     if exists {
         format!("{} ✓", path_display)
     } else {
@@ -4265,14 +4268,14 @@ fn run_time_metrics_report(
     let report = rt
         .block_on(async {
             get_time_metrics_report(ReportOptions {
-                home_dir,
+                home_dir: home_dir.clone(),
                 use_env_roots,
                 clients,
                 since,
                 until,
                 year,
                 group_by: GroupBy::default(),
-                scanner_settings: tui::settings::load_scanner_settings(),
+                scanner_settings: tui::settings::load_scanner_settings_for_home(&home_dir),
             })
             .await
         })
@@ -4369,14 +4372,14 @@ fn run_graph_command(
     let graph_result = rt
         .block_on(async {
             generate_local_graph_report(ReportOptions {
-                home_dir,
+                home_dir: home_dir.clone(),
                 use_env_roots,
                 clients,
                 since,
                 until,
                 year,
                 group_by: GroupBy::default(),
-                scanner_settings: tui::settings::load_scanner_settings(),
+                scanner_settings: tui::settings::load_scanner_settings_for_home(&home_dir),
             })
             .await
         })
