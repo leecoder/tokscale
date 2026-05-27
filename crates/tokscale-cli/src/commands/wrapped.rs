@@ -169,14 +169,19 @@ async fn load_wrapped_data(options: &WrappedOptions) -> Result<WrappedData> {
         .cloned()
         .collect();
     let include_cursor = clients.iter().any(|src| src == ClientId::Cursor.as_str());
+    let explicit_cursor = options
+        .clients
+        .as_ref()
+        .is_some_and(|sources| sources.iter().any(|src| src == ClientId::Cursor.as_str()));
 
     let since = format!("{}-01-01", year);
     let until = format!("{}-12-31", year);
 
     let has_cursor_cache = cursor::has_cursor_usage_cache();
+    let cursor_logged_in = cursor::is_cursor_logged_in();
     let mut cursor_sync_result: Option<cursor::SyncCursorResult> = None;
 
-    if include_cursor && cursor::is_cursor_logged_in() {
+    if include_cursor && cursor_logged_in {
         cursor_sync_result = Some(cursor::sync_cursor_cache().await);
     }
 
@@ -202,6 +207,11 @@ async fn load_wrapped_data(options: &WrappedOptions) -> Result<WrappedData> {
     } else {
         false
     };
+    if let Some(warning) =
+        cursor_setup_warning_for_wrapped(explicit_cursor, include_cursor_in_graph, cursor_logged_in)
+    {
+        eprintln!("{}", format!("  Warning: {warning}").yellow());
+    }
 
     let graph_clients = if include_cursor && !include_cursor_in_graph {
         clients
@@ -2979,5 +2989,50 @@ mod tests {
         ];
         let (_current, longest) = calculate_streaks(&dates);
         assert_eq!(longest, 4);
+    }
+}
+
+fn cursor_setup_warning_for_wrapped(
+    explicit_cursor: bool,
+    include_cursor_in_graph: bool,
+    cursor_logged_in: bool,
+) -> Option<String> {
+    if !explicit_cursor || include_cursor_in_graph {
+        return None;
+    }
+
+    let action = if cursor_logged_in {
+        "run `tokscale cursor sync`"
+    } else {
+        "run `tokscale cursor login` and `tokscale cursor sync`"
+    };
+
+    Some(format!(
+        "Cursor usage requires Tokscale's Cursor API cache at `~/.config/tokscale/cursor-cache/usage*.csv`; {action}. Tokscale does not parse local `~/.cursor` session data."
+    ))
+}
+
+#[cfg(test)]
+mod cursor_setup_warning_tests {
+    use super::cursor_setup_warning_for_wrapped;
+
+    #[test]
+    fn wrapped_cursor_warning_suggests_login_when_not_authenticated() {
+        let warning = cursor_setup_warning_for_wrapped(true, false, false).unwrap();
+        assert!(warning.contains("tokscale cursor login"));
+        assert!(warning.contains("tokscale cursor sync"));
+    }
+
+    #[test]
+    fn wrapped_cursor_warning_suggests_sync_only_when_authenticated() {
+        let warning = cursor_setup_warning_for_wrapped(true, false, true).unwrap();
+        assert!(!warning.contains("tokscale cursor login"));
+        assert!(warning.contains("tokscale cursor sync"));
+    }
+
+    #[test]
+    fn wrapped_cursor_warning_is_suppressed_without_explicit_missing_cursor() {
+        assert!(cursor_setup_warning_for_wrapped(false, false, false).is_none());
+        assert!(cursor_setup_warning_for_wrapped(true, true, false).is_none());
     }
 }
