@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import styled from "styled-components";
 
 // Inlined view of the groups list that lives under the /leaderboard ?view=groups
@@ -274,12 +274,27 @@ export default function GroupsBrowser({
     mine: false,
   });
   const [error, setError] = useState<string | null>(null);
+  // Tracks the in-flight fetch per tab so we can:
+  //   1. Cancel a same-tab duplicate (rapid Load More clicks) without
+  //      stomping a request from the other tab.
+  //   2. Always clear the loading state on completion or abort — the
+  //      previous implementation skipped the `setTabLoading(tab, false)`
+  //      reset when the request was aborted, which left the tab stuck
+  //      with loading=true if the abort happened mid-flight.
+  const inflightByTab = useRef<Map<ActiveTab, AbortController>>(new Map());
 
   const setTabLoading = useCallback((tab: ActiveTab, isLoading: boolean) => {
     setLoadingState((current) => ({ ...current, [tab]: isLoading }));
   }, []);
 
-  const loadGroups = useCallback((tab: ActiveTab, append = false, signal?: AbortSignal) => {
+  const loadGroups = useCallback((tab: ActiveTab, append = false) => {
+    // Abort any in-flight request for THIS tab (a fresh Load More
+    // supersedes the previous one). Requests for the other tab keep
+    // running so a tab switch does not lose work.
+    inflightByTab.current.get(tab)?.abort();
+    const controller = new AbortController();
+    inflightByTab.current.set(tab, controller);
+
     const page =
       append && tab === "mine"
         ? myPagination.page + 1
@@ -299,7 +314,7 @@ export default function GroupsBrowser({
     setTabLoading(tab, true);
     setError(null);
 
-    fetch(url, { signal })
+    fetch(url, { signal: controller.signal })
       .then((response) => {
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
         return response.json();
@@ -331,11 +346,26 @@ export default function GroupsBrowser({
         }
       })
       .finally(() => {
-        if (!signal?.aborted) {
+        // Only clear loading if this controller is still the active one
+        // for this tab. If a newer request superseded it, leave the
+        // newer loading state alone (it owns the spinner now).
+        if (inflightByTab.current.get(tab) === controller) {
           setTabLoading(tab, false);
+          inflightByTab.current.delete(tab);
         }
       });
   }, [myPagination.page, publicPagination.page, setTabLoading]);
+
+  // Abort every in-flight request on unmount.
+  useEffect(() => {
+    const inflight = inflightByTab.current;
+    return () => {
+      for (const controller of inflight.values()) {
+        controller.abort();
+      }
+      inflight.clear();
+    };
+  }, []);
 
   const groups = activeTab === "mine" ? myGroups : publicGroups;
   const activePagination = activeTab === "mine" ? myPagination : publicPagination;
@@ -346,6 +376,15 @@ export default function GroupsBrowser({
     }
 
     setActiveTab(tab);
+
+    // Skip the network fetch when the tab's SSR data is still on page 1 and
+    // already has rows — no stale data to refresh.
+    const currentGroups = tab === "mine" ? myGroups : publicGroups;
+    const currentPagination = tab === "mine" ? myPagination : publicPagination;
+    if (currentPagination.page === 1 && currentGroups.length > 0) {
+      return;
+    }
+
     loadGroups(tab);
   };
 

@@ -131,6 +131,7 @@ jobs:
             --out Xml Json \
             --output-dir ./coverage \
             --timeout 300 \
+            --fail-under 45 \
             --verbose
 
       - name: Extract coverage percentage
