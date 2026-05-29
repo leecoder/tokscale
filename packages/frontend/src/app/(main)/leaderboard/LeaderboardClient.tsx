@@ -16,13 +16,6 @@ const Section = styled.div`
   margin-bottom: 40px;
 `;
 
-const Title = styled.h1`
-  font-size: 30px;
-  font-weight: bold;
-  margin-bottom: 8px;
-  color: var(--color-fg-default);
-`;
-
 const Description = styled.p`
   margin-bottom: 24px;
   color: var(--color-fg-muted);
@@ -1243,7 +1236,6 @@ export default function LeaderboardClient({ initialData, currentUser, initialSor
   return (
     <>
       <Section>
-        <Title>Leaderboard</Title>
         <Description>See who&apos;s using the most tokens</Description>
 
         <StatsGrid>
