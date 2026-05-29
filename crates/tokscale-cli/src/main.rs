@@ -321,6 +321,19 @@ enum Commands {
         summarizer: String,
         #[arg(long, help = "Reset all summaries and re-summarize from scratch")]
         rebuild: bool,
+        #[arg(long, help = "Append diagnosis after the report")]
+        diagnose: bool,
+    },
+    #[command(about = "Diagnose usage patterns and suggest cost/productivity optimizations")]
+    Diagnose {
+        #[arg(long, help = "Output as JSON")]
+        json: bool,
+        #[arg(long, help = "Filter by workspace path")]
+        workspace: Option<String>,
+        #[arg(long, help = "Filter by client (opencode, claude, codex, etc.)")]
+        client: Option<String>,
+        #[command(flatten)]
+        date: DateRangeFlags,
     },
 }
 
@@ -727,17 +740,18 @@ fn main() -> Result<()> {
             no_summarize,
             summarizer,
             rebuild,
+            diagnose,
         }) => {
             let today = date.today;
             let week = date.week;
             let month = date.month;
             let (since, until) = build_date_filter(today, week, month, date.since, date.until);
-            commands::report::run_report(commands::report::ReportOptions {
+            let result = commands::report::run_report(commands::report::ReportOptions {
                 json,
-                since,
-                until,
-                workspace,
-                client,
+                since: since.clone(),
+                until: until.clone(),
+                workspace: workspace.clone(),
+                client: client.clone(),
                 no_summarize,
                 summarizer,
                 rebuild,
@@ -746,6 +760,38 @@ fn main() -> Result<()> {
                 today,
                 week,
                 month,
+            });
+            if diagnose && result.is_ok() {
+                let _ = commands::optimize::run_optimize(commands::optimize::OptimizeOptions {
+                    json: false,
+                    since,
+                    until,
+                    workspace,
+                    client,
+                    home_dir: cli.home.clone(),
+                    scanner_settings: tui::settings::load_scanner_settings(),
+                });
+            }
+            result
+        }
+        Some(Commands::Diagnose {
+            json,
+            workspace,
+            client,
+            date,
+        }) => {
+            let today = date.today;
+            let week = date.week;
+            let month = date.month;
+            let (since, until) = build_date_filter(today, week, month, date.since, date.until);
+            commands::optimize::run_optimize(commands::optimize::OptimizeOptions {
+                json,
+                since,
+                until,
+                workspace,
+                client,
+                home_dir: cli.home.clone(),
+                scanner_settings: tui::settings::load_scanner_settings(),
             })
         }
         None => {

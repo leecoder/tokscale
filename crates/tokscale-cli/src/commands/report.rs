@@ -97,18 +97,26 @@ pub fn run_report(opts: ReportOptions) -> Result<()> {
 }
 
 fn populate_wiki_from_sessions(db: &WikiDb, opts: &ReportOptions) -> Result<()> {
+    populate_wiki_from_sessions_with_opts(db, opts.home_dir.as_deref(), &opts.scanner_settings)
+}
+
+pub fn populate_wiki_from_sessions_with_opts(
+    db: &WikiDb,
+    home_dir: Option<&str>,
+    scanner_settings: &tokscale_core::scanner::ScannerSettings,
+) -> Result<()> {
     let existing = db
         .get_existing_session_ids()
         .map_err(|e| anyhow::anyhow!("{}", e))?;
 
     let parsed = parse_local_clients(LocalParseOptions {
-        home_dir: opts.home_dir.clone(),
-        use_env_roots: opts.home_dir.is_none(),
+        home_dir: home_dir.map(|s| s.to_string()),
+        use_env_roots: home_dir.is_none(),
         clients: None,
         since: None,
         until: None,
         year: None,
-        scanner_settings: opts.scanner_settings.clone(),
+        scanner_settings: scanner_settings.clone(),
     })
     .map_err(|e| anyhow::anyhow!("{}", e))?;
 
@@ -148,7 +156,7 @@ fn populate_wiki_from_sessions(db: &WikiDb, opts: &ReportOptions) -> Result<()> 
         }
 
         let models_used: Vec<String> = agg.models.keys().cloned().collect();
-        let duration_minutes = (agg.last_active - agg.created_at) / 60;
+        let duration_minutes = (agg.last_active - agg.created_at) / 60_000;
 
         let entry = WikiEntry {
             session_id: session_id.clone(),
@@ -760,7 +768,7 @@ fn find_summarizer_script() -> Result<PathBuf> {
     ))
 }
 
-fn parse_date_range(since: &Option<String>, until: &Option<String>) -> (Option<i64>, Option<i64>) {
+pub fn parse_date_range(since: &Option<String>, until: &Option<String>) -> (Option<i64>, Option<i64>) {
     let since_ts = since.as_ref().and_then(|s| {
         chrono::NaiveDate::parse_from_str(s, "%Y-%m-%d")
             .ok()
