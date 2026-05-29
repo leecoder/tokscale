@@ -34,3 +34,7 @@ self-host/
 .next/
 .vercel
 .env*.local
+
+# Downloaded binary (postinstall creates this)
+/bin/tokscale
+/bin/tokscale.exe

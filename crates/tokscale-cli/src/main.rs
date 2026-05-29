@@ -762,7 +762,7 @@ fn main() -> Result<()> {
                 month,
             });
             if diagnose && result.is_ok() {
-                let _ = commands::optimize::run_optimize(commands::optimize::OptimizeOptions {
+                let _ = commands::diagnose::run_diagnose(commands::diagnose::DiagnoseOptions {
                     json: false,
                     since,
                     until,
@@ -784,7 +784,7 @@ fn main() -> Result<()> {
             let week = date.week;
             let month = date.month;
             let (since, until) = build_date_filter(today, week, month, date.since, date.until);
-            commands::optimize::run_optimize(commands::optimize::OptimizeOptions {
+            commands::diagnose::run_diagnose(commands::diagnose::DiagnoseOptions {
                 json,
                 since,
                 until,

@@ -1,13 +1,13 @@
 {
-  "name": "tokscale-monorepo",
-  "version": "1.0.0",
-  "private": true,
-  "description": "Token Usage Leaderboard - The Kardashev Scale for AI Devs",
+  "name": "tokscale",
+  "version": "3.0.0",
+  "description": "AI coding assistant token usage tracker",
   "type": "module",
-  "workspaces": [
-    "packages/*"
-  ],
+  "bin": {
+    "tokscale": "./bin/tokscale"
+  },
   "scripts": {
+    "postinstall": "node scripts/install-from-github.js",
     "build": "cargo build --release -p tokscale-cli && bun run build:cli",
     "build:cli": "bun run --cwd packages/cli build",
     "build:core": "cargo build --release -p tokscale-cli",
@@ -16,9 +16,17 @@
     "dev:benchmarks": "bun run --cwd packages/benchmarks run",
     "test:launchers": "bash scripts/test-package-launchers.sh"
   },
+  "workspaces": [
+    "packages/*"
+  ],
   "devDependencies": {
     "@resvg/resvg-js": "^2.6.2",
     "@types/node": "^20.0.0",
     "typescript": "^5.0.0"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/leecoder/tokscale.git"
   }
 }
