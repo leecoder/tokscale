@@ -43,19 +43,25 @@ jobs:
             NEW_VERSION="${{ inputs.version }}"
             echo "📌 Using override version: $NEW_VERSION"
           else
-            # Strip any prerelease suffix for calculation
+            # Parse version: base-lcN format (e.g., 3.0.0-lc1)
             BASE="${CURRENT_VERSION%%-*}"
             IFS='.' read -r MAJOR MINOR PATCH <<< "$BASE"
             
             case "${{ inputs.bump }}" in
               "major (X.0.0)")
-                NEW_VERSION="$((MAJOR + 1)).0.0"
+                NEW_VERSION="$((MAJOR + 1)).0.0-lc1"
                 ;;
               "minor (x.X.0)")
-                NEW_VERSION="${MAJOR}.$((MINOR + 1)).0"
+                NEW_VERSION="${MAJOR}.$((MINOR + 1)).0-lc1"
                 ;;
               *)
-                NEW_VERSION="${MAJOR}.${MINOR}.$((PATCH + 1))"
+                # For patch: increment -lcN suffix if present, otherwise add -lc1
+                if [[ "$CURRENT_VERSION" =~ -lc([0-9]+)$ ]]; then
+                  LC_NUM="${BASH_REMATCH[1]}"
+                  NEW_VERSION="${BASE}-lc$((LC_NUM + 1))"
+                else
+                  NEW_VERSION="${MAJOR}.${MINOR}.$((PATCH + 1))-lc1"
+                fi
                 ;;
             esac
             echo "🎯 Bump type: ${{ inputs.bump }}"
