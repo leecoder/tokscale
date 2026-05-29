@@ -111,6 +111,7 @@ In the age of AI-assisted development, **tokens are the new energy**. They power
   - [Cursor IDE Commands](#cursor-ide-commands)
   - [Antigravity Commands](#antigravity-commands)
   - [Trae Commands](#trae-commands)
+  - [Task-Attributed Report](#task-attributed-report)
   - [Subscription Usage](#subscription-usage)
   - [Example Output](#example-output---light-version)
   - [Configuration](#configuration)
@@ -153,6 +154,7 @@ In the age of AI-assisted development, **tokens are the new energy**. They power
 - **Native Rust core** - All parsing and aggregation done in Rust for 10x faster processing
 - **Web visualization** - Interactive contribution graph with 2D and 3D views
 - **Flexible filtering** - Filter by platform, date range, or year
+- **Task-attributed reports** - LLM-powered session summarization and task grouping with multi-backend support (Apple FM, Claude, Codex, Gemini, Kiro)
 - **Export to JSON** - Generate data for external visualization tools
 - **Social Platform** - Share your usage, compete on leaderboards, and view public profiles
 
@@ -610,6 +612,71 @@ tokscale trae logout --variant solo
 > **Note on pricing**: Trae cost figures are **vendor-reported** — tokscale surfaces the `dollar_float` value returned by Trae's own API rather than recomputing cost from token counts through tokscale's pricing engine. Numbers will match what you see on `trae.ai/account-setting#usage`, not what tokscale would otherwise calculate for the same usage.
 
 > **China variants**: The China editions (`trae.com.cn`) are intentionally **not** supported. The CN backend does not expose a session-level usage query API. Trae CN / Trae Solo CN support will be added once an official endpoint becomes available upstream.
+
+### Task-Attributed Report
+
+The `report` command generates a task-attributed usage breakdown. It uses an LLM to summarize each session into a short title and category, then groups related sessions into high-level task clusters for a bird's-eye view of where your tokens went.
+
+```bash
+# Basic report (today, default Apple FM summarizer)
+tokscale report
+
+# Last 7 days
+tokscale report --week
+
+# Use Claude Code as the summarizer backend
+tokscale report --week --summarizer claude
+
+# Use Codex, Gemini, or Kiro
+tokscale report --summarizer codex
+tokscale report --summarizer gemini
+tokscale report --summarizer kiro
+
+# Skip LLM summarization (show raw data only)
+tokscale report --no-summarize
+
+# Re-summarize from scratch (resets cached summaries in range)
+tokscale report --week --rebuild
+
+# Output as JSON
+tokscale report --week --json
+
+# Filter by workspace or client
+tokscale report --workspace my-project --client opencode
+```
+
+**Summarizer backends:**
+
+| Backend | Command | Notes |
+|---------|---------|-------|
+| `apple-fm` | (default) | Uses Apple Foundation Models via a local Python script. macOS only. |
+| `claude` | `claude -p` | Requires Claude Code CLI installed and authenticated. |
+| `codex` | `codex --quiet` | Requires Codex CLI installed and authenticated. |
+| `gemini` | `gemini -p` | Requires Gemini CLI installed and authenticated. |
+| `kiro` | `kiro --non-interactive` | Requires Kiro CLI installed and authenticated. |
+
+**How it works:**
+
+1. Sessions are scanned and inserted into a local SQLite wiki database (`~/.config/tokscale/wiki.db`)
+2. Unsummarized sessions are sent to the chosen LLM backend in batches, which returns a title, category, description, and complexity for each
+3. A second LLM pass groups all titled sessions into 3–8 high-level task clusters (e.g. "Kiro Auth", "Tokscale Report", "System Config")
+4. Results are cached in the wiki DB — subsequent runs skip already-summarized sessions
+
+**Example output:**
+
+```
+  Task Group                                  Sess     Tokens     Cost
+  ───────────────────────────────────────────────────────────────────────
+  Tokscale Development                          19      4.2B    $22.66
+    Add task-attributed report command
+    Implement wiki DB schema
+    Fix pricing lookup for new models
+  System Config                                 28      2.1B    $10.06
+    Configure OpenCode workspace settings
+    Update shell aliases
+  Kiro Auth                                      4    890.5M     $3.10
+    Implement JWT refresh flow
+```
 
 ### Subscription Usage
 
