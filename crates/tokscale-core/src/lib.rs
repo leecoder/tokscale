@@ -3,6 +3,7 @@
 mod aggregator;
 mod cc_mirror;
 pub mod clients;
+pub mod content_extractor;
 pub mod fs_atomic;
 pub mod mcp;
 mod message_cache;
@@ -14,7 +15,6 @@ pub mod scanner;
 pub mod sessionize;
 pub mod sessions;
 pub mod wiki;
-pub mod content_extractor;
 
 pub use aggregator::*;
 pub use clients::{ClientCounts, ClientDef, ClientId, PathRoot};
