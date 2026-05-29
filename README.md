@@ -678,6 +678,57 @@ tokscale report --workspace my-project --client opencode
     Implement JWT refresh flow
 ```
 
+### Diagnose
+
+The `diagnose` command analyzes your usage patterns and surfaces actionable cost/productivity recommendations. It compares the current period against the previous period of equal length and fires rules when thresholds are exceeded.
+
+```bash
+# Diagnose last 7 days (default)
+tokscale diagnose
+
+# Diagnose a specific date range
+tokscale diagnose --since 2025-06-01 --until 2025-06-07
+
+# Filter by workspace or client
+tokscale diagnose --workspace my-project --client opencode
+
+# Output as JSON
+tokscale diagnose --json
+
+# Append diagnosis to a report
+tokscale report --week --diagnose
+```
+
+**Diagnostic rules:**
+
+| Rule | Trigger | Recommendation |
+|------|---------|----------------|
+| Cache miss | Model cache reuse < 10% and spend > $3 | Enable prompt caching or restructure prompts |
+| Premium overuse | Expensive model (> $10/M tokens) used heavily on low-risk tasks | Switch to a cheaper model for routine work |
+| Spend spike | > 50% increase and > $5 absolute increase vs previous period | Investigate which models/workspaces drove the spike |
+| Runaway sessions | Session cost > 3× median | Review long-running sessions for inefficiency |
+
+**Example output:**
+
+```
+Diagnosis (Jun 1 – Jun 7 vs May 25 – May 31)
+
+⚠ Spend spike: $42.10 → $68.30 (+62%, +$26.20)
+  └─ Driven by claude-sonnet-4-20250514 in tokscale workspace
+
+⚠ Runaway sessions: 3 sessions exceeded 3× median cost ($4.20)
+  └─ Session abc123 ($18.40), Session def456 ($14.20), Session ghi789 ($12.80)
+
+ℹ Cache miss: claude-sonnet-4-20250514 cache reuse at 4% (spend $12.30)
+  └─ Estimated savings with caching: ~$6.15
+
+What Changed          Current    Previous    Delta
+─────────────────────────────────────────────────
+Total spend           $68.30     $42.10      +62%
+Sessions              142        98          +45%
+Median session cost   $4.20      $3.80       +11%
+```
+
 ### Subscription Usage
 
 Tokscale can fetch and display your real-time subscription quota across AI providers. This shows how much of your plan you've used and when limits reset.
