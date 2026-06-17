@@ -1,5 +1,5 @@
 use anyhow::Result;
-use chrono::{TimeZone, Utc};
+use chrono::{Local, TimeZone};
 use colored::Colorize;
 use std::collections::HashMap;
 use std::io::Write;
@@ -24,6 +24,7 @@ pub struct ReportOptions {
     pub today: bool,
     pub week: bool,
     pub month: bool,
+    pub full: bool,
 }
 
 pub fn run_report(opts: ReportOptions) -> Result<()> {
@@ -81,7 +82,7 @@ pub fn run_report(opts: ReportOptions) -> Result<()> {
             println!("{}", json);
         } else {
             let is_multi_day = opts.week || opts.month || (opts.since.is_some() && !opts.today);
-            print_report_table(&entries, &db, is_multi_day)?;
+            print_report_table(&entries, &db, is_multi_day, opts.full)?;
         }
     } else {
         if opts.json {
@@ -89,7 +90,7 @@ pub fn run_report(opts: ReportOptions) -> Result<()> {
             println!("{}", json);
         } else {
             let is_multi_day = opts.week || opts.month || (opts.since.is_some() && !opts.today);
-            print_report_table(&entries, &db, is_multi_day)?;
+            print_report_table(&entries, &db, is_multi_day, opts.full)?;
         }
     }
 
@@ -547,7 +548,7 @@ fn extract_json_array(text: &str) -> String {
     clean
 }
 
-fn print_report_table(entries: &[WikiEntry], _db: &WikiDb, is_multi_day: bool) -> Result<()> {
+fn print_report_table(entries: &[WikiEntry], _db: &WikiDb, is_multi_day: bool, full: bool) -> Result<()> {
     if entries.is_empty() {
         println!("No sessions found for the given filters.");
         return Ok(());
@@ -672,20 +673,20 @@ fn print_report_table(entries: &[WikiEntry], _db: &WikiDb, is_multi_day: bool) -
     println!();
 
     if is_multi_day {
-        print_daily_breakdown(entries);
+        print_daily_breakdown(entries, full);
     } else {
-        print_session_list(entries);
+        print_session_list(entries, full);
     }
 
     Ok(())
 }
 
-fn print_daily_breakdown(entries: &[WikiEntry]) {
+fn print_daily_breakdown(entries: &[WikiEntry], full: bool) {
     use std::collections::BTreeMap;
 
     let mut by_date: BTreeMap<String, (f64, i64, usize, Vec<&WikiEntry>)> = BTreeMap::new();
     for entry in entries {
-        let date_key = Utc
+        let date_key = Local
             .timestamp_opt(entry.created_at / 1000, 0)
             .single()
             .map(|dt| dt.format("%Y-%m-%d").to_string())
@@ -711,7 +712,7 @@ fn print_daily_breakdown(entries: &[WikiEntry]) {
             format_tokens(*tokens),
             format!("${:.2}", cost),
         );
-        for s in sessions.iter().take(5) {
+        for s in sessions.iter().take(if full { sessions.len() } else { 5 }) {
             let title = s.title.as_deref().unwrap_or("(pending)");
             let model = s.models_used.first().map(|m| m.as_str()).unwrap_or("-");
             let display_title: &str = if title.len() > 40 {
@@ -726,20 +727,21 @@ fn print_daily_breakdown(entries: &[WikiEntry]) {
                 display_title,
             );
         }
-        if sessions.len() > 5 {
+        if !full && sessions.len() > 5 {
             println!("    … +{} more sessions", sessions.len() - 5);
         }
     }
     println!();
 }
 
-fn print_session_list(entries: &[WikiEntry]) {
-    let recent: Vec<&WikiEntry> = entries.iter().take(10).collect();
-    if !recent.is_empty() {
+fn print_session_list(entries: &[WikiEntry], full: bool) {
+    let limit = if full { entries.len() } else { 10 };
+    let to_show: Vec<&WikiEntry> = entries.iter().take(limit).collect();
+    if !to_show.is_empty() {
         println!("  Sessions:");
         println!("  {}", "─".repeat(80));
-        for entry in recent {
-            let date = Utc
+        for entry in &to_show {
+            let date = Local
                 .timestamp_opt(entry.created_at / 1000, 0)
                 .single()
                 .map(|dt| dt.format("%H:%M").to_string())
@@ -757,7 +759,7 @@ fn print_session_list(entries: &[WikiEntry]) {
                 title,
             );
         }
-        if entries.len() > 10 {
+        if !full && entries.len() > 10 {
             println!("    … +{} more sessions", entries.len() - 10);
         }
         println!();

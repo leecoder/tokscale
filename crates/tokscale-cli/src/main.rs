@@ -333,6 +333,8 @@ enum Commands {
         summarizer: String,
         #[arg(long, help = "Reset all summaries and re-summarize from scratch")]
         rebuild: bool,
+        #[arg(long, help = "Show all sessions without truncation")]
+        full: bool,
     },
 }
 
@@ -771,11 +773,12 @@ fn main() -> Result<()> {
             no_summarize,
             summarizer,
             rebuild,
+            full,
         }) => {
             let today = date.today;
             let week = date.week;
             let month = date.month;
-            let (since, until) = build_date_filter(today, week, month, date.since, date.until);
+            let (since, until) = build_date_filter(&date);
             commands::report::run_report(commands::report::ReportOptions {
                 json,
                 since,
@@ -790,6 +793,7 @@ fn main() -> Result<()> {
                 today,
                 week,
                 month,
+                full,
             })
         }
         None => {
