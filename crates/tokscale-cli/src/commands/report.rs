@@ -321,7 +321,7 @@ fn run_task_grouping(db: &WikiDb, entries: &[WikiEntry], backend: &str) -> Resul
             .stderr(Stdio::piped())
             .output()?,
         "codex" => Command::new("codex")
-            .args(["--quiet", "--approval-mode", "never"])
+            .args(["exec"])
             .arg(format!("{}\n\n{}", GROUPING_SYSTEM_PROMPT, prompt))
             .stdout(Stdio::piped())
             .stderr(Stdio::piped())
@@ -332,8 +332,8 @@ fn run_task_grouping(db: &WikiDb, entries: &[WikiEntry], backend: &str) -> Resul
             .stdout(Stdio::piped())
             .stderr(Stdio::piped())
             .output()?,
-        "kiro" => Command::new("kiro")
-            .args(["--non-interactive", "--prompt"])
+        "kiro" => Command::new("kiro-cli")
+            .args(["chat", "--no-interactive"])
             .arg(format!("{}\n\n{}", GROUPING_SYSTEM_PROMPT, prompt))
             .stdout(Stdio::piped())
             .stderr(Stdio::piped())
@@ -355,7 +355,7 @@ fn run_task_grouping(db: &WikiDb, entries: &[WikiEntry], backend: &str) -> Resul
     let stdout = String::from_utf8_lossy(&output.stdout);
     let json_str = extract_json_array(&stdout);
 
-    match serde_json::from_str::<Vec<serde_json::Value>>(json_str) {
+    match serde_json::from_str::<Vec<serde_json::Value>>(&json_str) {
         Ok(results) => {
             for result in &results {
                 let session_id = result["session_id"].as_str().unwrap_or_default();
@@ -455,7 +455,7 @@ fn run_cli_summarizer(
             .stderr(Stdio::piped())
             .output()?,
         "codex" => Command::new("codex")
-            .args(["--quiet", "--approval-mode", "never"])
+            .args(["exec"])
             .arg(format!("{}\n\n{}", SUMMARIZER_SYSTEM_PROMPT, prompt))
             .stdout(Stdio::piped())
             .stderr(Stdio::piped())
@@ -466,8 +466,8 @@ fn run_cli_summarizer(
             .stdout(Stdio::piped())
             .stderr(Stdio::piped())
             .output()?,
-        "kiro" => Command::new("kiro")
-            .args(["--non-interactive", "--prompt"])
+        "kiro" => Command::new("kiro-cli")
+            .args(["chat", "--no-interactive"])
             .arg(format!("{}\n\n{}", SUMMARIZER_SYSTEM_PROMPT, prompt))
             .stdout(Stdio::piped())
             .stderr(Stdio::piped())
@@ -489,7 +489,7 @@ fn run_cli_summarizer(
     let stdout = String::from_utf8_lossy(&output.stdout);
     let json_str = extract_json_array(&stdout);
 
-    match serde_json::from_str::<Vec<serde_json::Value>>(json_str) {
+    match serde_json::from_str::<Vec<serde_json::Value>>(&json_str) {
         Ok(results) => Ok(results),
         Err(e) => {
             eprintln!(
@@ -503,13 +503,48 @@ fn run_cli_summarizer(
     }
 }
 
-fn extract_json_array(text: &str) -> &str {
-    if let Some(start) = text.find('[') {
-        if let Some(end) = text.rfind(']') {
-            return &text[start..=end];
+fn strip_ansi(text: &str) -> String {
+    let mut out = String::with_capacity(text.len());
+    let mut chars = text.chars().peekable();
+    while let Some(c) = chars.next() {
+        if c == '\x1b' {
+            match chars.peek() {
+                Some('[') => {
+                    chars.next();
+                    for ch in chars.by_ref() {
+                        if ch.is_ascii_alphabetic() || ch == 'm' {
+                            break;
+                        }
+                    }
+                }
+                Some(']') => {
+                    chars.next();
+                    for ch in chars.by_ref() {
+                        if ch == '\x07' || ch == '\x1b' {
+                            break;
+                        }
+                    }
+                }
+                _ => {
+                    chars.next();
+                }
+            }
+        } else if c == '\r' || (c as u32) < 32 && c != '\n' && c != '\t' {
+        } else {
+            out.push(c);
         }
     }
-    text
+    out
+}
+
+fn extract_json_array(text: &str) -> String {
+    let clean = strip_ansi(text);
+    if let Some(start) = clean.find('[') {
+        if let Some(end) = clean.rfind(']') {
+            return clean[start..=end].to_string();
+        }
+    }
+    clean
 }
 
 fn print_report_table(entries: &[WikiEntry], _db: &WikiDb, is_multi_day: bool) -> Result<()> {
