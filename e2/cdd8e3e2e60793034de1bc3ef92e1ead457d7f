@@ -1,0 +1,20 @@
+crates/tokscale-core/src/sessions/kiro.rs
+  s_f4390e3bb2d5c2::t_941ea1df06dbd9 527
+  s_f4390e3bb2d5c2::t_567ddbece8e7c9 534-544
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "e2cdd8e3e2e60793034de1bc3ef92e1ead457d7f",
+  "prompts": {},
+  "sessions": {
+    "s_f4390e3bb2d5c2": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ses_0d8cc736cffeU7vFH81bP9NaVa",
+        "model": "unknown"
+      },
+      "human_author": "leecoder <leecoder@aol.com>"
+    }
+  }
+}
