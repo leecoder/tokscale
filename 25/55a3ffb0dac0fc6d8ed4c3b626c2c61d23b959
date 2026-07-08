@@ -1,0 +1,19 @@
+AGENTS.md
+  s_f4390e3bb2d5c2::t_71a8b5cad5122c 121-127
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "2555a3ffb0dac0fc6d8ed4c3b626c2c61d23b959",
+  "prompts": {},
+  "sessions": {
+    "s_f4390e3bb2d5c2": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ses_0d8cc736cffeU7vFH81bP9NaVa",
+        "model": "unknown"
+      },
+      "human_author": "leecoder <leecoder@aol.com>"
+    }
+  }
+}
