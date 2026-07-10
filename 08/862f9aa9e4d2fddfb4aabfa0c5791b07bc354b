@@ -1,0 +1,22 @@
+packages/frontend/src/components/profile/index.tsx
+  s_8d3642dd98a9ab::t_338b1147c20a9b 362,365-369
+  s_8d3642dd98a9ab::t_c8d4fa3b2a66cc 472,474
+  s_8d3642dd98a9ab::t_09262a24c3eec8 3
+  s_8d3642dd98a9ab::t_d61ecc40d37322 370
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.11",
+  "base_commit_sha": "08862f9aa9e4d2fddfb4aabfa0c5791b07bc354b",
+  "prompts": {},
+  "sessions": {
+    "s_8d3642dd98a9ab": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ses_0b56ab29effeirJ3Kz4Rc4gp7O",
+        "model": "unknown"
+      },
+      "human_author": "leecoder <leecoder@aol.com>"
+    }
+  }
+}
