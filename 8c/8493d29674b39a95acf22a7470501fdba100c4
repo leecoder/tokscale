@@ -1,0 +1,252 @@
+packages/cli-linux-x64-musl/package.json
+  s_8d3642dd98a9ab::t_1d7b0bb2144f70 3
+packages/frontend/src/lib/types.ts
+  s_8d3642dd98a9ab::t_1d7b0bb2144f70 36-39
+crates/tokscale-core/src/sessions/workbuddy.rs
+  s_8d3642dd98a9ab::t_e441d055b9fcce 1-267
+packages/frontend/src/lib/embed/getUserEmbedStats.ts
+  s_8d3642dd98a9ab::t_1d7b0bb2144f70 46,73
+packages/cli-linux-x64-gnu/package.json
+  s_8d3642dd98a9ab::t_1d7b0bb2144f70 3
+.github/badges/coverage.svg
+  s_8d3642dd98a9ab::t_1d7b0bb2144f70 1-2,16-17
+crates/tokscale-cli/src/tui/ui/mod.rs
+  s_8d3642dd98a9ab::t_1d7b0bb2144f70 11,55
+packages/tokscale/package.json
+  s_8d3642dd98a9ab::t_1d7b0bb2144f70 3,30
+crates/tokscale-cli/src/tui/codex_login.rs
+  s_8d3642dd98a9ab::t_1d7b0bb2144f70 1-2,8-409
+crates/tokscale-cli/src/tui/themes.rs
+  s_8d3642dd98a9ab::t_1d7b0bb2144f70 1,59-61,76-78,99-101,120-122,139-140,218-238,251-252,256-289,305-306,335-340,353,361,445-491,529
+crates/tokscale-core/src/sessions/tencent_buddy.rs
+  s_8d3642dd98a9ab::t_e441d055b9fcce 1-578
+.github/workflows/publish-cli.yml
+  s_8d3642dd98a9ab::t_1d7b0bb2144f70 298-333,336
+crates/tokscale-cli/src/tui/ui/models.rs
+  s_8d3642dd98a9ab::t_1d7b0bb2144f70 8-9,163,188,218
+crates/tokscale-cli/src/commands/report.rs
+  s_8d3642dd98a9ab::t_1d7b0bb2144f70 32,91,98,143-147,216,393,404-405,833,844-845,990-995,1004-1005,1027-1032,1073-1077,1135,1137,1143,1156-1160,1178-1179,1201-1203,1226,2078
+crates/tokscale-cli/src/tui/app.rs
+  s_8d3642dd98a9ab::t_1d7b0bb2144f70 7,12,17-20,22-23,43-54,63,77,91,105,118-119,133-134,238-275,313-316,322,348,357,359,384-391,464-466,471,499,509-518,556-564,621-631,642,646-647,651,656,774-781,792,800,859,914-916,925-929,958,965,967-968,991-1023,1123,1199,1224-1233,1288,1427,1471-1492,1578-1580,1592-1594,1608,1764-1767,1794-1796,1951-2000,2003-2005,2096-2103,2255-2278,2452-2453,2455-2479,2481-2482,2486,2489-2490,2493-2494,2502-2504,2508,2513,2520-2522,2532-2533,2546-2547,2559,2571,2789-2858,2875-3000,3196-3382,3409-3426,3446-3448,3470-3472,3501,4025,4075,4086-4217,4294-4308,4419-4444,4661,4670,4784
+crates/tokscale-cli/src/tui/ui/dialog/confirm.rs
+  s_8d3642dd98a9ab::t_1d7b0bb2144f70 266-267
+crates/tokscale-core/src/sessions/opencode.rs
+  s_8d3642dd98a9ab::t_1d7b0bb2144f70 141-147,179,194,200,204-214,303,341,771-894
+  s_07cc4390bb3478::t_b3f54215273e8e 895
+packages/cli/package.json
+  s_8d3642dd98a9ab::t_1d7b0bb2144f70 3,32-39
+crates/tokscale-cli/src/commands/mod.rs
+  s_8d3642dd98a9ab::t_1d7b0bb2144f70 2
+crates/tokscale-cli/src/tui/data/mod.rs
+  s_8d3642dd98a9ab::t_1d7b0bb2144f70 136-143,164,203-212,914-915,931,1075-1110,1267-1280,1444-1447,1543-1550,1584-1585,1686-1693,2717-2827
+  s_07cc4390bb3478::t_ae50009bef155c 135
+crates/tokscale-cli/src/tui/ui/footer.rs
+  s_8d3642dd98a9ab::t_1d7b0bb2144f70 161-164,200-207,241-254,435-438
+packages/frontend/__tests__/api/usersProfile.test.ts
+  s_8d3642dd98a9ab::t_1d7b0bb2144f70 3-4,40,53,95,107,156,269-306,480-612
+  s_07cc4390bb3478::t_ceeae4c22fdf45 613-614
+crates/tokscale-cli/src/commands/usage/codex.rs
+  s_8d3642dd98a9ab::t_1d7b0bb2144f70 3,8,13-15,25,175-229,234-359,427,468-499,503-504,507-521,524-527,530-534,538,586,589-594,596,603-606,624-626,643-647,652-654,657,659,794-835,837-845,847-865,867,869,873,875-876,917-921,923-930,991,1002,1198,1311-1315,1322,1353-1369,1371-1423,1427,1430-1432,1467,1470-1474,1478-1480,1507,1579-1586,1588-1589,1591,1593-1594,1601-1613,1811-1836,1867-1870,2039-2091,2125-2215,2289-2375,2490-2615
+packages/cli-darwin-arm64/package.json
+  s_8d3642dd98a9ab::t_1d7b0bb2144f70 3
+packages/cli-linux-arm64-musl/package.json
+  s_8d3642dd98a9ab::t_1d7b0bb2144f70 3
+packages/frontend/src/app/api/users/[username]/route.ts
+  s_8d3642dd98a9ab::t_1d7b0bb2144f70 3,17-60,67,70-72,93-97,102-112,118,168,177,214,237,395,409-435,516-520,529,532-538,541-543,546-547,549-550,556-557
+packages/frontend/src/components/landing/sections/QuickstartSection.tsx
+  s_8d3642dd98a9ab::t_1d7b0bb2144f70 62,92
+packages/frontend/src/components/profile/index.tsx
+  s_8d3642dd98a9ab::t_1d7b0bb2144f70 13
+README.zh-cn.md
+  s_8d3642dd98a9ab::t_1d7b0bb2144f70 89,92,160,163,279,284,373,819,958,1290,1293,1697
+crates/tokscale-cli/src/tui/ui/monthly.rs
+  s_8d3642dd98a9ab::t_e441d055b9fcce 1-658
+crates/tokscale-core/src/sessions/zcode.rs
+  s_8d3642dd98a9ab::t_e441d055b9fcce 1-1100
+crates/tokscale-cli/src/tui/keymap.rs
+  s_8d3642dd98a9ab::t_e441d055b9fcce 1-236
+crates/tokscale-cli/src/tui/ui/widgets.rs
+  s_8d3642dd98a9ab::t_1d7b0bb2144f70 2,7,25-26
+  s_07cc4390bb3478::t_4a38d6cefec721 27-28
+crates/tokscale-core/src/sessions/claudecode.rs
+  s_8d3642dd98a9ab::t_1d7b0bb2144f70 131-148,153-154,160-167,173,356-360,2302-2439
+  s_07cc4390bb3478::t_c1bb76a8390e1f 2440
+README.ja.md
+  s_8d3642dd98a9ab::t_1d7b0bb2144f70 88,91,162,165,282,287,376,823,958,1292,1295,1669
+crates/tokscale-cli/src/tui/cache.rs
+  s_8d3642dd98a9ab::t_1d7b0bb2144f70 18-19,628-629,634,640
+crates/tokscale-core/src/sessions/opencodereview.rs
+  s_8d3642dd98a9ab::t_e441d055b9fcce 1-292
+crates/tokscale-cli/src/tui/ui/hourly.rs
+  s_8d3642dd98a9ab::t_1d7b0bb2144f70 9,228,252
+packages/frontend/src/app/api/settings/account/route.ts
+  s_8d3642dd98a9ab::t_e441d055b9fcce 1-85
+crates/tokscale-core/src/lib.rs
+  s_8d3642dd98a9ab::t_1d7b0bb2144f70 27,1020-1036,1100-1109,1302-1333,1494-1504,1507-1510,1512,1517-1519,1584-1641,1712-1749,1864-1870,1920-1937,1964-1965,1967-1970,2034-2039,2060-2063,2136-2142,2177-2180,2343-2346,2359,2567,2576-2588,2730-2766,2907,2910,2912-2916,3007-3044,3203,3217-3220,3242-3311,3343-3367,3392-3441,4279,5200-5310,6899-7032
+  s_07cc4390bb3478::t_1a80282979f1b5 7033
+packages/frontend/__tests__/support/costCastWidths.ts
+  s_8d3642dd98a9ab::t_e441d055b9fcce 1-30
+crates/tokscale-core/src/sessions/copilot.rs
+  s_8d3642dd98a9ab::t_1d7b0bb2144f70 161,163-175,182-284,612-627,688,1031-1110
+  s_07cc4390bb3478::t_d623ff958cd098 1111
+packages/frontend/__tests__/lib/getGroupLeaderboard.test.ts
+  s_8d3642dd98a9ab::t_1d7b0bb2144f70 3-4,300-317
+  s_07cc4390bb3478::t_ffe91edc0d7441 318
+crates/tokscale-core/src/message_cache.rs
+  s_8d3642dd98a9ab::t_1d7b0bb2144f70 26-40,208-237,982-1021
+  s_07cc4390bb3478::t_b899c5f943db7e 1022
+packages/frontend/src/app/u/[username]/ProfilePageClient.tsx
+  s_8d3642dd98a9ab::t_1d7b0bb2144f70 4,25-26,58,70,180-181,314-391
+crates/tokscale-cli/Cargo.toml
+  s_8d3642dd98a9ab::t_1d7b0bb2144f70 40
+crates/tokscale-cli/src/tui/ui/minutely.rs
+  s_8d3642dd98a9ab::t_1d7b0bb2144f70 7-9,179,218
+crates/tokscale-core/src/scanner.rs
+  s_8d3642dd98a9ab::t_1d7b0bb2144f70 84,92-93,105,113,272-281,343-358,366,637-652,656-678,930-1009,1065,1067-1074,1357-1363,1386-1399,1525-1529,1687-1714,1850-1885,1892-1964,2899-2924,3166-3187,3296-3404
+  s_07cc4390bb3478::t_697cd498d182d2 3405
+crates/tokscale-core/src/sessions/jcode.rs
+  s_8d3642dd98a9ab::t_1d7b0bb2144f70 152,158-176,178,200-203,239,287,618-661
+  s_07cc4390bb3478::t_819f0e32e86ace 662
+crates/tokscale-cli/src/tui/ui/agents.rs
+  s_8d3642dd98a9ab::t_1d7b0bb2144f70 7,119,132
+crates/tokscale-cli/src/tui/mod.rs
+  s_8d3642dd98a9ab::t_1d7b0bb2144f70 10
+crates/tokscale-core/src/sessions/copilot_desktop.rs
+  s_8d3642dd98a9ab::t_e441d055b9fcce 1-437
+scripts/test-release-package-artifacts.sh
+  s_8d3642dd98a9ab::t_e441d055b9fcce 1-245
+crates/tokscale-cli/src/tui/settings.rs
+  s_8d3642dd98a9ab::t_1d7b0bb2144f70 19-22,49-109,152-153,187-190,203,245,544-564
+  s_07cc4390bb3478::t_a77f76e2882bef 565
+README.ko.md
+  s_8d3642dd98a9ab::t_1d7b0bb2144f70 88,91,160,163,278,283,372,823,962,1298,1301,1700
+crates/tokscale-core/src/aggregator.rs
+  s_8d3642dd98a9ab::t_1d7b0bb2144f70 766,1355
+crates/tokscale-core/src/sessions/mod.rs
+  s_8d3642dd98a9ab::t_1d7b0bb2144f70 10,15,34,39,43-44,49-57,71-72,352,378-389
+crates/tokscale-cli/src/commands/wrapped.rs
+  s_8d3642dd98a9ab::t_1d7b0bb2144f70 274-281,295-303,378-385,394
+crates/tokscale-cli/src/tui/ui/daily.rs
+  s_8d3642dd98a9ab::t_1d7b0bb2144f70 9-10,190,226,449,475
+crates/tokscale-core/src/sessions/mux.rs
+  s_8d3642dd98a9ab::t_a86be392e6629a 76
+  s_8d3642dd98a9ab::t_1d7b0bb2144f70 96-102,324-368
+  s_07cc4390bb3478::t_971b368fafcafa 369
+scripts/check-release-workflow-safety.py
+  s_8d3642dd98a9ab::t_1d7b0bb2144f70 140-181,275-289
+  s_07cc4390bb3478::t_35b710c7909026 290
+packages/frontend/src/components/profile/modelColors.ts
+  s_8d3642dd98a9ab::t_e441d055b9fcce 1-38
+packages/frontend/src/components/landing/sections/HeroSection.tsx
+  s_8d3642dd98a9ab::t_1d7b0bb2144f70 36,46-49,257
+packages/frontend/src/lib/constants.ts
+  s_8d3642dd98a9ab::t_1d7b0bb2144f70 64-67,108-113,151-154
+packages/frontend/src/lib/leaderboard/getLeaderboard.ts
+  s_8d3642dd98a9ab::t_1d7b0bb2144f70 346,354,367,419,472,503,605,638
+crates/tokscale-core/src/sessions/pi.rs
+  s_8d3642dd98a9ab::t_1d7b0bb2144f70 3-6,28-41,105-106,110-113,116-123,279-335
+packages/frontend/__tests__/components/modelColors.test.ts
+  s_8d3642dd98a9ab::t_e441d055b9fcce 1-61
+crates/tokscale-cli/tests/cli_tests.rs
+  s_8d3642dd98a9ab::t_1d7b0bb2144f70 524-578,1847,1862,1871,1886,1895,1910,1919,1939,1946,1950,1955-2050
+  s_07cc4390bb3478::t_67df1e62470d94 2051
+packages/frontend/__tests__/api/settingsAccountDelete.test.ts
+  s_8d3642dd98a9ab::t_e441d055b9fcce 1-283
+packages/frontend/src/app/settings/SettingsClient.tsx
+  s_8d3642dd98a9ab::t_1d7b0bb2144f70 3,63-66,310-651,691-694,700,767-777,1146-1179,1183-1190
+packages/cli-darwin-x64/package.json
+  s_8d3642dd98a9ab::t_1d7b0bb2144f70 3
+crates/tokscale-cli/src/commands/usage/mod.rs
+  s_8d3642dd98a9ab::t_1d7b0bb2144f70 1-2,135-245,361,374-403,409,439-440,442-464,467,470-471,473-479,481-497,524-529,559-571
+crates/tokscale-cli/src/commands/usage/helpers.rs
+  s_8d3642dd98a9ab::t_1d7b0bb2144f70 2,30-41,56-63,65,67,113-156
+crates/tokscale-core/src/sessions/codebuddy.rs
+  s_8d3642dd98a9ab::t_e441d055b9fcce 1-107
+crates/tokscale-cli/src/tui/ui/usage.rs
+  s_8d3642dd98a9ab::t_1d7b0bb2144f70 5-7,105-109,112,118-124,154-160,458-493,495-498,500,557-558,560-575,590-598,635-638,846-954,1198,1228-1234,1270-1375,1436,1461-1470,1472-1475,1477-1501,1503-1508,1612-1615,1736,1741-1759,1807,1818,1823,1839-1840,1860-1864,1868-1872,1912-1917,2387-2394,2406-2412,2415,2419-2420,2499-2500,2504,2538-2548,2553,2562,2570-2593,2686,2825,2859-2972,3079,3088,3092,3100,3132-3261,3270-3360,3364,3392,3568,3595-3620
+  s_07cc4390bb3478::t_2647d84f11ad5a 3621
+crates/tokscale-cli/src/tui/colors.rs
+  s_8d3642dd98a9ab::t_1d7b0bb2144f70 13-19,23-24,40-46,64-287
+packages/frontend/src/app/u/[username]/page.tsx
+  s_8d3642dd98a9ab::t_1d7b0bb2144f70 8-10,19-33,97-103,105-106,108,117
+packages/frontend/src/components/landing/sections/FollowSection.tsx
+  s_8d3642dd98a9ab::t_1d7b0bb2144f70 16
+README.md
+  s_8d3642dd98a9ab::t_1d7b0bb2144f70 89,92-95,125,164,167-168,285,290,379,526-550,858,866,998-999,1335,1338-1341,1759
+crates/tokscale-cli/src/commands/autosubmit.rs
+  s_8d3642dd98a9ab::t_e441d055b9fcce 1-1024
+Cargo.toml
+  s_8d3642dd98a9ab::t_1d7b0bb2144f70 9
+crates/tokscale-core/src/pricing/lookup.rs
+  s_8d3642dd98a9ab::t_1d7b0bb2144f70 392-407,1619-1638,3741-3781
+  s_07cc4390bb3478::t_acccc71124f898 3782
+crates/tokscale-core/src/sessions/grok.rs
+  s_8d3642dd98a9ab::t_1d7b0bb2144f70 5-7,9-10,209,218,222-313,346-348,353-365,517,532-534,550,576,595,609,625,634-715
+packages/cli-linux-arm64-gnu/package.json
+  s_8d3642dd98a9ab::t_1d7b0bb2144f70 3
+crates/tokscale-cli/src/tui/client_ui.rs
+  s_8d3642dd98a9ab::t_1d7b0bb2144f70 141-156
+crates/tokscale-core/src/sessions/kiro.rs
+  s_8d3642dd98a9ab::t_1d7b0bb2144f70 3-4,8-10,29,101-115,117-120,367-682,719-721,724-725,731-732,797-798,804-806,828-829,857-868,880,893-905,920,928-1239,1542-1894,2065-2066,2069-2126,2128-2234
+packages/frontend/__tests__/lib/getUserEmbedStats.test.ts
+  s_8d3642dd98a9ab::t_1d7b0bb2144f70 3-4,182,205,209-228
+  s_07cc4390bb3478::t_afc21242716ab8 229-230
+crates/tokscale-core/src/clients.rs
+  s_8d3642dd98a9ab::t_1d7b0bb2144f70 466,498-533,586-614
+packages/frontend/src/lib/groups/getGroupLeaderboard.ts
+  s_8d3642dd98a9ab::t_1d7b0bb2144f70 262,266,276
+crates/tokscale-core/src/sessions/gjc.rs
+  s_8d3642dd98a9ab::t_1d7b0bb2144f70 24,76-77,79-80,91,93,95-98,100,103-105,129,210,230,243-245,386
+.github/workflows/test_coverage.yml
+  s_8d3642dd98a9ab::t_1d7b0bb2144f70 15-16,29-30,58
+scripts/test-release-workflow-safety.sh
+  s_8d3642dd98a9ab::t_1d7b0bb2144f70 57-66,193-286,293-296
+packages/frontend/__tests__/lib/getLeaderboardAllTime.test.ts
+  s_8d3642dd98a9ab::t_1d7b0bb2144f70 3-4,506-553
+packages/frontend/src/components/landing/sections/WorldwideSection.tsx
+  s_8d3642dd98a9ab::t_1d7b0bb2144f70 111-114
+packages/cli-win32-x64-msvc/package.json
+  s_8d3642dd98a9ab::t_1d7b0bb2144f70 3
+packages/cli-win32-arm64-msvc/package.json
+  s_8d3642dd98a9ab::t_1d7b0bb2144f70 3
+crates/tokscale-cli/src/main.rs
+  s_8d3642dd98a9ab::t_1d7b0bb2144f70 30-31,64-69,134-138,154-158,174-178,250-254,362-363,526,536,547,555,572,576,584,592,599,609,613,621,629,694,718-729,819,839,860,862,873,881,946-949,992-995,1041-1044,1087-1090,1751,1789-1803,1967-1972,1993-1998,2035-2040,2061-2066,2105-2110,2130-2135,2215-2220,2254-2259,2311-2316,2346-2351,2406-2411,2440-2445,2495-2500,2533-2538,2579-2584,2618,2655-2666,2770-2775,2790-2797,2847-2852,2872-2879,2941,2978-2990,3095-3100,3173-3178,3582-3616,3618-3627,3645-3651,3726-3728,3844,3852-3858,4971-4973,5113-5166,5173,5183-5187,5197-5198,5361-5365,5372-5374,5432-5434,5442-5444,6052-6149,6782-6825
+  s_07cc4390bb3478::t_d2077210db91a7 6826
+crates/tokscale-cli/src/tui/export.rs
+  s_8d3642dd98a9ab::t_1d7b0bb2144f70 52-64
+crates/tokscale-core/src/sessions/codex.rs
+  s_8d3642dd98a9ab::t_1d7b0bb2144f70 3-10
+crates/tokscale-core/src/sessionize.rs
+  s_8d3642dd98a9ab::t_1d7b0bb2144f70 74-89,406,442-464
+  s_07cc4390bb3478::t_c42f865b7036a5 465-466
+crates/tokscale-core/src/sessions/micode.rs
+  s_8d3642dd98a9ab::t_1d7b0bb2144f70 4
+Cargo.lock
+  s_07cc4390bb3478::t_dff9a90647635b 3433,3449,3478
+packages/frontend/src/app/api/submit/route.ts
+  s_8d3642dd98a9ab::t_a20ad0ef2c62db 488,514
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.11",
+  "base_commit_sha": "8c8493d29674b39a95acf22a7470501fdba100c4",
+  "prompts": {},
+  "sessions": {
+    "s_07cc4390bb3478": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_0b56ab29effeirJ3Kz4Rc4gp7O",
+        "model": "claude-opus-4-6"
+      },
+      "human_author": "leecoder <leecoder@aol.com>"
+    },
+    "s_8d3642dd98a9ab": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ses_0b56ab29effeirJ3Kz4Rc4gp7O",
+        "model": "unknown"
+      },
+      "human_author": "leecoder <leecoder@aol.com>"
+    }
+  }
+}
