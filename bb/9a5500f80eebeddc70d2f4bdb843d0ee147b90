@@ -1,0 +1,63 @@
+crates/tokscale-core/src/sessions/mod.rs
+  s_6758eb0ef50ccd::t_3305ef4414f425 16
+.opencode/skill/deploy/SKILL.md
+  s_8d3642dd98a9ab::t_69126f1527f91c 1-75
+crates/tokscale-core/src/sessions/copilot_vscode.rs
+  s_6758eb0ef50ccd::t_c51b8efe6d7450 1-8,10-73,78-82,87-92,94-107,109-144,146-214,218-231,233-268,272-286,290-306,310-326,330-334
+  s_6758eb0ef50ccd::t_9efc98535a062a 9,74-77,83-86,93,108,145,215-217,269-271,287-289,307-309,327-329
+  s_6758eb0ef50ccd::t_1a5e6d8d420159 232
+crates/tokscale-core/src/lib.rs
+  s_6758eb0ef50ccd::t_0cee6c3f81287d 2983-2986,2992-2997,3000-3001,3006-3008
+  s_e2547eb55f0e07::t_2b6abe29fb5808 2987-2991,2998-2999,3002-3005
+  s_e2547eb55f0e07::t_880143739d3561 1226-1230,1238-1239,1242-1245
+  s_6758eb0ef50ccd::t_bd9a88b38457c9 1220-1225,1234-1237,1240-1241,1246-1252
+  s_6758eb0ef50ccd::t_9efc98535a062a 1231-1233
+crates/tokscale-core/src/scanner.rs
+  s_6758eb0ef50ccd::t_c7e3806b42ea4d 123
+  s_6758eb0ef50ccd::t_96ce0c4e3b92d3 101-103
+  s_6758eb0ef50ccd::t_c8255f66b69d20 978-994,996-1015,1017-1034
+  s_6758eb0ef50ccd::t_9efc98535a062a 995,1016,1789
+  s_6758eb0ef50ccd::t_1a7f750022332b 1790
+.omo/run-continuation/ses_0b56ab29effeirJ3Kz4Rc4gp7O.json
+  s_69c8df5785587a::t_aa54c9454a3b2b 1-10
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.13",
+  "base_commit_sha": "bb9a5500f80eebeddc70d2f4bdb843d0ee147b90",
+  "prompts": {},
+  "sessions": {
+    "s_6758eb0ef50ccd": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ses_0a5e64533ffeIV46Bsofr35vTL",
+        "model": "unknown"
+      },
+      "human_author": "leecoder <leecoder@aol.com>"
+    },
+    "s_69c8df5785587a": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_0b4139e1fffe1Xf8fQyxb6Vcdt",
+        "model": "claude-opus-4-6"
+      },
+      "human_author": "leecoder <leecoder@aol.com>"
+    },
+    "s_8d3642dd98a9ab": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ses_0b56ab29effeirJ3Kz4Rc4gp7O",
+        "model": "unknown"
+      },
+      "human_author": null
+    },
+    "s_e2547eb55f0e07": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ses_0e38e6fb7ffeHm2q8A2VdpEr1N",
+        "model": "unknown"
+      },
+      "human_author": null
+    }
+  }
+}
