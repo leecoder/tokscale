@@ -1,0 +1,25 @@
+packages/frontend/src/lib/leaderboard/searchDirectives.ts
+  s_8c8bd1dc768abc::t_781f67269fa486 1-59
+packages/frontend/src/lib/leaderboard/getLeaderboard.ts
+  s_8c8bd1dc768abc::t_781f67269fa486 12,27,46,202,204,208,227-258,263-264,266,273-275,336,361,380,393-408,436,445-451,455,467
+packages/frontend/src/lib/groups/getGroupLeaderboard.ts
+  s_8c8bd1dc768abc::t_781f67269fa486 6,19,103-104,153-182,185,264,291,295-297,305-316,348,392
+packages/frontend/__tests__/lib/searchDirectives.test.ts
+  s_8c8bd1dc768abc::t_781f67269fa486 1-92
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.13",
+  "base_commit_sha": "6fb74bb9fc79a9fc60639737f575b29efa2aa445",
+  "prompts": {},
+  "sessions": {
+    "s_8c8bd1dc768abc": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ses_0a55edaceffeAbxcmwU94RYjiZ",
+        "model": "unknown"
+      },
+      "human_author": "leecoder <leecoder@aol.com>"
+    }
+  }
+}
