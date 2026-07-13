@@ -1,0 +1,25 @@
+packages/frontend/src/lib/leaderboard/searchDirectives.ts
+  s_3deeb119d6ade6::t_ea76e447a3d7ce 1-34
+packages/frontend/__tests__/lib/searchDirectives.test.ts
+  s_3deeb119d6ade6::t_b2dbae179ac4be 1-92
+packages/frontend/src/lib/leaderboard/getLeaderboard.ts
+  s_3deeb119d6ade6::t_bae007994d3a4d 12,27,46,202,204,208,227-257,262-263,265,272-274,335,360,379,392-407,435,444-450,454,467
+packages/frontend/src/lib/groups/getGroupLeaderboard.ts
+  s_3deeb119d6ade6::t_c862b642e74466 6,19,103-104,153-182,185,264,291,295-297,305-316,348,392
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.13",
+  "base_commit_sha": "60b10346aed87f0e02eea058d4538561d0f6cd52",
+  "prompts": {},
+  "sessions": {
+    "s_3deeb119d6ade6": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_0a2555c28ffefWLrxlcL2hTXRF",
+        "model": "gpt-5.3-codex"
+      },
+      "human_author": "leecoder <leecoder@aol.com>"
+    }
+  }
+}
