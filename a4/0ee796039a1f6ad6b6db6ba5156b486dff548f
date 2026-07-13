@@ -1,0 +1,41 @@
+packages/frontend/src/lib/leaderboard/getLeaderboard.ts
+  s_8c8bd1dc768abc::t_c1b9bed947fbcf 22
+  s_8c8bd1dc768abc::t_6599647c4151a9 184-214,219-220,222,229-231
+  s_8c8bd1dc768abc::t_bed8d96920659d 37
+  s_8c8bd1dc768abc::t_4af81c33224090 285,304
+  s_8c8bd1dc768abc::t_f6798d7b6ac2d0 323,332-347,360,367-373,377,389
+  s_8c8bd1dc768abc::t_28a8d780050b75 11
+  s_8c8bd1dc768abc::t_ffe9fb82bfd6e4 159,161,165
+packages/frontend/__tests__/lib/searchDirectives.test.ts
+  s_8c8bd1dc768abc::t_c42a5836034513 1-92
+packages/frontend/src/lib/leaderboard/searchDirectives.ts
+  s_8c8bd1dc768abc::t_ec035e30530472 1-54
+packages/frontend/__tests__/lib/getLeaderboard.test.ts
+  s_8c8bd1dc768abc::t_1faeda58c91620 234
+packages/frontend/__tests__/lib/getGroupLeaderboard.test.ts
+  s_8c8bd1dc768abc::t_2e1feff3db408d 253
+packages/frontend/src/lib/groups/getGroupLeaderboard.ts
+  s_8c8bd1dc768abc::t_3fe09d4b5afc3a 15
+  s_8c8bd1dc768abc::t_5ce7d4722844cd 257-259,267-278,298
+  s_8c8bd1dc768abc::t_d8b7be8e175d89 231,253
+  s_8c8bd1dc768abc::t_3a043d6228c9d5 334
+  s_8c8bd1dc768abc::t_ccecb833e23bd5 5
+  s_8c8bd1dc768abc::t_1f4f21a8dc1ec3 140-169,172
+  s_8c8bd1dc768abc::t_a3b35dd1b78072 93-94
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.13",
+  "base_commit_sha": "a40ee796039a1f6ad6b6db6ba5156b486dff548f",
+  "prompts": {},
+  "sessions": {
+    "s_8c8bd1dc768abc": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ses_0a55edaceffeAbxcmwU94RYjiZ",
+        "model": "unknown"
+      },
+      "human_author": "leecoder <leecoder@aol.com>"
+    }
+  }
+}
