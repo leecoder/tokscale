@@ -1,11 +1,28 @@
 packages/frontend/src/lib/leaderboard/searchDirectives.ts
   s_8c8bd1dc768abc::t_781f67269fa486 1-59
+  s_8c8bd1dc768abc::t_9b92751c5e8562 1-59
 packages/frontend/src/lib/leaderboard/getLeaderboard.ts
   s_8c8bd1dc768abc::t_781f67269fa486 12,27,46,202,204,208,227-258,263-264,266,273-275,336,361,380,393-408,436,445-451,455,467
+  s_8c8bd1dc768abc::t_ef09d41e7c8ff9 12
+  s_8c8bd1dc768abc::t_7ddfa2f0907094 336,361
+  s_8c8bd1dc768abc::t_0c6c2c1275c7da 27
+  s_8c8bd1dc768abc::t_1e5d335818a708 227-228,230-258,263-264,266,273-275
+  s_8c8bd1dc768abc::t_2704b7c3619e21 46
+  s_8c8bd1dc768abc::t_8e3156e8fa369c 380,393-408,436,445-451,455,467
+  s_8c8bd1dc768abc::t_fbf657716e0ff9 202,204,208
+  s_8c8bd1dc768abc::t_95c629e7f2edc6 229
 packages/frontend/src/lib/groups/getGroupLeaderboard.ts
   s_8c8bd1dc768abc::t_781f67269fa486 6,19,103-104,153-182,185,264,291,295-297,305-316,348,392
+  s_8c8bd1dc768abc::t_72fe84c39bcd10 19
+  s_8c8bd1dc768abc::t_5a50d300aecaef 6
+  s_8c8bd1dc768abc::t_94a4117a44021e 153-182,185
+  s_8c8bd1dc768abc::t_f00b5e57046ce5 264,291
+  s_8c8bd1dc768abc::t_91f6666459ccd6 392
+  s_8c8bd1dc768abc::t_1a18ceb5cca474 103-104
+  s_8c8bd1dc768abc::t_5f2598f9ae9f3c 295-297,305-316,348
 packages/frontend/__tests__/lib/searchDirectives.test.ts
   s_8c8bd1dc768abc::t_781f67269fa486 1-92
+  s_8c8bd1dc768abc::t_be58eefb5cfe87 1-92
 ---
 {
   "schema_version": "authorship/3.0.0",
