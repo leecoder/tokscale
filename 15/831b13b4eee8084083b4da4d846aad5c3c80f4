@@ -1,0 +1,19 @@
+packages/frontend/src/app/api/submit/route.ts
+  s_8d3642dd98a9ab::t_56aaa77f044d93 479-480,482-504
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.13",
+  "base_commit_sha": "15831b13b4eee8084083b4da4d846aad5c3c80f4",
+  "prompts": {},
+  "sessions": {
+    "s_8d3642dd98a9ab": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ses_0b56ab29effeirJ3Kz4Rc4gp7O",
+        "model": "unknown"
+      },
+      "human_author": "leecoder <leecoder@aol.com>"
+    }
+  }
+}
