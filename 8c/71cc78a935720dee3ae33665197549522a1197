@@ -1,0 +1,30 @@
+packages/frontend/src/app/api/submit/route.ts
+  s_8d3642dd98a9ab::t_11dc15040a390f 480-502
+packages/frontend/__tests__/api/submitAuth.test.ts
+  s_cb50dc82344e99::t_098a0a3942ca61 1589
+  s_cb50dc82344e99::t_a6685528a43ab1 450,483,492-494,496-505,507,1048,1075-1092,1423,1619-1637
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.13",
+  "base_commit_sha": "8c71cc78a935720dee3ae33665197549522a1197",
+  "prompts": {},
+  "sessions": {
+    "s_8d3642dd98a9ab": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ses_0b56ab29effeirJ3Kz4Rc4gp7O",
+        "model": "unknown"
+      },
+      "human_author": "leecoder <leecoder@aol.com>"
+    },
+    "s_cb50dc82344e99": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_09f19d308ffe0rV0HEslrChLlX",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": null
+    }
+  }
+}
