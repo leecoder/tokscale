@@ -1,0 +1,51 @@
+crates/tokscale-core/src/sessions/copilot.rs
+  s_78f524819ef1b0::t_c0f65f1d8fd573 756,758-763
+  s_78f524819ef1b0::t_50a22613d214f8 877
+crates/tokscale-core/src/sessions/codex.rs
+  s_9316b93a4e2e0f::t_3ef1b813bfc650 2646-2659
+  s_0f09dd247dedf1::t_58bff9f5733c25 560-562
+crates/tokscale-core/src/sessions/claudecode.rs
+  s_ce017ea0c80217::t_470d4b90fa2599 664-665
+  s_ce017ea0c80217::t_72ca5203e15ac4 881-882
+  s_9316b93a4e2e0f::t_a8110659cf66ee 1873
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.13",
+  "base_commit_sha": "c9522e386a7ceffd2c52ba4aa5bf511961d3a4d8",
+  "prompts": {},
+  "sessions": {
+    "s_0f09dd247dedf1": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ses_09d1a006cffeXba0HSltcdjUnV",
+        "model": "unknown"
+      },
+      "human_author": "leecoder <leecoder@aol.com>"
+    },
+    "s_78f524819ef1b0": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ses_0bfcd0052ffea8Qr6hVLHQpqIT",
+        "model": "unknown"
+      },
+      "human_author": "leecoder <leecoder@aol.com>"
+    },
+    "s_9316b93a4e2e0f": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ses_09d1a0049ffe4aiDXJK9c6XOET",
+        "model": "unknown"
+      },
+      "human_author": "leecoder <leecoder@aol.com>"
+    },
+    "s_ce017ea0c80217": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ses_09d1a004affe3NrI3vjgIozZbf",
+        "model": "unknown"
+      },
+      "human_author": "leecoder <leecoder@aol.com>"
+    }
+  }
+}
