@@ -1,0 +1,20 @@
+crates/tokscale-core/src/message_cache.rs
+  s_78f524819ef1b0::t_39344b6640e8a0 795,797,804
+  s_78f524819ef1b0::t_4db621180e5496 2003-2005
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.13",
+  "base_commit_sha": "49baca36728d5069dd7cd86367e2d3a0bfd2a5ed",
+  "prompts": {},
+  "sessions": {
+    "s_78f524819ef1b0": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ses_0bfcd0052ffea8Qr6hVLHQpqIT",
+        "model": "unknown"
+      },
+      "human_author": "leecoder <leecoder@aol.com>"
+    }
+  }
+}
