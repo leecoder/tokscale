@@ -1,0 +1,23 @@
+crates/tokscale-core/src/sessions/claudecode.rs
+  s_cfadbd4afc9628::t_4e4dd117e41f54 458-462,464
+  s_cfadbd4afc9628::t_f754ae151c701b 542-560
+  s_cfadbd4afc9628::t_8e7c1d6681a51b 463
+  s_cfadbd4afc9628::t_068f0d69c3161c 2350-2386
+  s_cfadbd4afc9628::t_73d52dea252ab0 149-155
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "feac10695a571c5e73ef9c82232b3af0dcb01389",
+  "prompts": {},
+  "sessions": {
+    "s_cfadbd4afc9628": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ses_09b0b6dc2ffe1eZHEOap0kKK7p",
+        "model": "unknown"
+      },
+      "human_author": "leecoder <leecoder@aol.com>"
+    }
+  }
+}
