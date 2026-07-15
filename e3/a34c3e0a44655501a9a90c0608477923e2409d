@@ -1,0 +1,19 @@
+crates/tokscale-core/src/sessions/codex.rs
+  s_78f524819ef1b0::t_50f392aa7dca44 2657-2665
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.13",
+  "base_commit_sha": "e3a34c3e0a44655501a9a90c0608477923e2409d",
+  "prompts": {},
+  "sessions": {
+    "s_78f524819ef1b0": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ses_0bfcd0052ffea8Qr6hVLHQpqIT",
+        "model": "unknown"
+      },
+      "human_author": "leecoder <leecoder@aol.com>"
+    }
+  }
+}
