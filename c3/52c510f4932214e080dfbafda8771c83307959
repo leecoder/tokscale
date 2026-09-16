@@ -1,0 +1,14 @@
+crates/tokscale-core/src/sessions/kiro.rs
+  h_dc03a1b36fc837 385-389,5501,5998
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "c352c510f4932214e080dfbafda8771c83307959",
+  "prompts": {},
+  "humans": {
+    "h_dc03a1b36fc837": {
+      "author": "leecoder <leecoder@aol.com>"
+    }
+  }
+}
